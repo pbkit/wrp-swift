@@ -49,20 +49,17 @@ public class WrpRequestMethodIdentifier {
 }
 
 public struct MethodHandlerContext<Response: SwiftProtobuf.Message> {
-  let sendHeader: (_ header: [String:String]) -> ()
-  let sendMessage: (_ message: Response) -> ()
-  let sendTrailer: (_ trailer: inout [String:String]) -> ()
+  public let sendHeader: (_ header: [String:String]) -> ()
+  public let sendMessage: (_ message: Response) -> ()
+  public let sendTrailer: (_ trailer: inout [String:String]) -> ()
 }
 
 public class WrpServerHandler<
   Request: SwiftProtobuf.Message,
   Response: SwiftProtobuf.Message
 >: WrpServerHandlerProtocol{
-  @usableFromInline
-  typealias Serializer = ProtobufSerializer<Response>
-  
-  @usableFromInline
-  typealias Deserializer = ProtobufDeserializer<Request>
+  public typealias Serializer = ProtobufSerializer<Response>
+  public typealias Deserializer = ProtobufDeserializer<Request>
   
   @usableFromInline
   internal let serializer: Serializer
@@ -76,7 +73,8 @@ public class WrpServerHandler<
   @usableFromInline
   internal let userFunction: (AsyncStream<Request>, MethodHandlerContext<Response>) -> ()
   
-  init(
+  @inlinable
+  public init(
     context: WrpRequestContext,
     responseSerializer: Serializer,
     requestDeserializer: Deserializer,
