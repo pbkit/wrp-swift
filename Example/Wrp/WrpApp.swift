@@ -17,7 +17,8 @@ struct WrpApp: App {
 struct WrpAppView: View {
     let url: String
     @State var glue: WrpGlue = WrpGlue()
-    @State var initNumber = 0
+    @State var initNumber = 1
+    @State var sliderValue = 0.0
     
     init(url: String) {
         self.url = url
@@ -25,7 +26,11 @@ struct WrpAppView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text("\(initNumber)")
+            VStack {
+                Text("Initialize \(initNumber) times")
+                Slider(value: $sliderValue, in: 0...100)
+                Text("\(sliderValue)")
+            }.padding().background(.bar)
             WrpView(
                 urlString: self.url,
                 glue: glue
