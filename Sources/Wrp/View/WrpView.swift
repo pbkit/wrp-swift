@@ -1,14 +1,7 @@
-//
-//  BaseWebView.swift
-//  pbridge
-//
-//  Created by hyperflow on 2022/04/29.
-//
-
 import SwiftUI
 import WebKit
 
-public struct WrpAppBridgeView: UIViewControllerRepresentable {
+public struct WrpView: UIViewControllerRepresentable {
     let urlString: String
     let configuration: WKWebViewConfiguration
     let channel: WrpChannel
@@ -37,9 +30,9 @@ public struct WrpAppBridgeView: UIViewControllerRepresentable {
     public func updateUIViewController(_ uiViewController: UIViewControllerType, context: Context) { }
     
     public class Coordinator: NSObject, WKScriptMessageHandler {
-        private let parent: WrpAppBridgeView
+        private let parent: WrpView
         
-        init(_ parent: WrpAppBridgeView) {
+        init(_ parent: WrpView) {
             self.parent = parent
         }
         
@@ -138,6 +131,14 @@ class AppBridgeViewController: UIViewController {
 
 
 extension AppBridgeViewController: WKUIDelegate, WKNavigationDelegate {
+  func webView(_ webView: WKWebView, decidePolicyFor: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+  // @TODO: Check if we need to check with other types only (like submit)
+  if decidePolicyFor.navigationType != .other {
+      self.channel.socket.close()
+  }
+    decisionHandler(.allow)
+  }
+    
   func webView(
     _ webView: WKWebView,
     runJavaScriptAlertPanelWithMessage message: String,
@@ -152,7 +153,7 @@ extension AppBridgeViewController: WKUIDelegate, WKNavigationDelegate {
     
     alertController.addAction(
       UIAlertAction(
-        title: "취소",
+        title: "Cancel",
         style: .cancel
       ) { _ in
         return completionHandler()
@@ -178,7 +179,7 @@ extension AppBridgeViewController: WKUIDelegate, WKNavigationDelegate {
     
     alertController.addAction(
       UIAlertAction(
-        title: "취소",
+        title: "Cancel",
         style: .cancel
       ) { _ in
         return completionHandler(false)
@@ -187,7 +188,7 @@ extension AppBridgeViewController: WKUIDelegate, WKNavigationDelegate {
     
     alertController.addAction(
       UIAlertAction(
-        title: "확인",
+        title: "Confirm",
         style: .default
       ) { _ in
         return completionHandler(true)

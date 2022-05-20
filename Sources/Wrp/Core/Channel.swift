@@ -22,7 +22,6 @@ public class WrpChannel {
                     continuation.yield(message)
                 }
                 continuation.finish()
-            
             }
         }
     }

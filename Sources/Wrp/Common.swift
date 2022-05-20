@@ -21,6 +21,7 @@ extension Data {
         self.append(other)
     }
     
+    // @TODO: Make it throws
     mutating func popFirst(_ k: Int) -> Data {
         let first = self.prefix(k)
         self.removeFirst(k)

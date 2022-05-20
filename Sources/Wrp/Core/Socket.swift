@@ -14,6 +14,10 @@ public class WrpSocket {
         self.webView = webView
     }
     
+    public func close() {
+        self.status = .closed
+    }
+    
     public func handshake(interval: UInt32 = 500, limit: Int = 10) async {
         for _ in 0..<interval {
             guard let webView = self.webView else {
@@ -45,7 +49,19 @@ public class WrpSocket {
     
     @discardableResult
     public func read() -> AsyncStream<Data> {
-        self.glue.read()
+        AsyncStream { continuation in
+            guard status != .closed else {
+                continuation.finish()
+                return
+            }
+            Task.init {
+                for await data in self.glue.read() {
+                    continuation.yield(data)
+                }
+                continuation.finish()
+            }
+            
+        }
     }
     
     public func write(_ data: Data) {
@@ -86,5 +102,6 @@ public class WrpSocket {
     public enum Status {
         case initialized
         case uninitialized
+        case closed
     }
 }

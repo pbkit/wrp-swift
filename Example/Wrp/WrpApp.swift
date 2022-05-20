@@ -5,44 +5,33 @@ import Wrp
 struct WrpApp: App {
     var body: some Scene {
         WindowGroup {
-            if let url = URL(string: "http://localhost:3000") {
+            if let url = "http://localhost:8000/wrp-example-guest" {
                 VStack {
-                    WrpWebView(url: url)
+                    WrpAppView(url: url)
                 }
             }
         }
     }
 }
 
-struct WrpWebView: View {
-    let url: URL
-    let channel: WrpChannel
-    let server: WrpServer
+struct WrpAppView: View {
+    let url: String
+    @State var server: WrpServer = .create(
+        configuration: .init(serviceProviders: [WrpTestServiceProvider()])
+    )
     
-    init(url: URL) {
+    init(url: String) {
         self.url = url
-        self.server = .create(configuration: .init(serviceProviders: [WrpTestServiceProvider()]))
-        self.channel = self.server.host.channel
     }
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            WrpAppBridgeView(
-                urlString: "http://localhost:3000",
-                channel: self.channel
+            WrpView(
+                urlString: self.url,
+                channel: server.host.channel
             ).task {
                 await server.start()
             }
-            List {
-                Button("Initialize Host (Manual)", action: {
-                    channel.send(message: .with {
-                        $0.message = .hostInitialize(.with {
-                            $0.availableMethods = ["pbkit.wrp.WrpTestService/Unary"]
-                        })
-                    })
-                    print("HostInitialize sent!")
-                })
-            }.frame(height: 120)
         }
     }
 }
