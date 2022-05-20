@@ -1,5 +1,6 @@
 import Foundation
 import Logging
+import SwiftProtobuf
 
 public final class WrpHost {
     public let channel: WrpChannel
@@ -14,8 +15,8 @@ public final class WrpHost {
         self.configuration = configuration
     }
     
-    public func start() async {
-        await self.channel.socket.handshake()
+    public func start() async throws {
+        try await self.channel.socket.handshake()
         sendInitialize()
     }
     
@@ -122,6 +123,7 @@ public final class WrpHost {
                         continue
                     }
                 }
+                continuation.finish()
                 print("WrpHost(listen): End")
             }
         }

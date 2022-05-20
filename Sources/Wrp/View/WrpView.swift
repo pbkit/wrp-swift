@@ -4,18 +4,16 @@ import WebKit
 public struct WrpView: UIViewControllerRepresentable {
     let urlString: String
     let configuration: WKWebViewConfiguration
-    let channel: WrpChannel
+    let glue: WrpGlue
     
     public init(
         urlString: String,
         configuration: WKWebViewConfiguration = .init(),
-        channel: WrpChannel
+        glue: WrpGlue
     ) {
         self.urlString = urlString
         self.configuration = configuration
-        
-        // @wrp: WrpGlue
-        self.channel = channel
+        self.glue = glue
     }
     
     public func makeUIViewController(context: Context) -> some UIViewController {
@@ -23,7 +21,7 @@ public struct WrpView: UIViewControllerRepresentable {
             urlString: self.urlString,
             configuration: self.configuration,
             messageHandler: context.coordinator,
-            channel: self.channel
+            glue: self.glue
         )
     }
     
@@ -40,7 +38,7 @@ public struct WrpView: UIViewControllerRepresentable {
             guard let payload = message.body as? String else { return }
             let data = Data(payload.unicodeScalars.map {v in UInt8(v.value)})
             print("WrpWebView: Received message body: \(data.map { $0 })")
-            try? self.parent.channel.socket.glue.recv(data)
+            self.parent.glue.recv(data)
         }
     }
     
@@ -56,7 +54,7 @@ class AppBridgeViewController: UIViewController {
     private let messageHandler: WKScriptMessageHandler
     
     // @wrp: WrpGlue
-    private let channel: WrpChannel
+    private let glue: WrpGlue
     
     var webview: WKWebView {
         return _webview
@@ -79,14 +77,14 @@ class AppBridgeViewController: UIViewController {
         urlString: String,
         configuration: WKWebViewConfiguration,
         messageHandler: WKScriptMessageHandler,
-        channel: WrpChannel
+        glue: WrpGlue
     ) {
         self.urlString = urlString
         self.configuration = configuration
         self.messageHandler = messageHandler
         
         // @wrp: WrpGlue
-        self.channel = channel
+        self.glue = glue
         
         super.init(nibName: nil, bundle: nil)
     }
@@ -108,7 +106,7 @@ class AppBridgeViewController: UIViewController {
         _webview.navigationDelegate = self
         
         // @wrp: Inject webview on WrpGlue
-        channel.socket.registerWebView(webview)
+        glue.registerWebView(webview)
         
         view.addSubview(_webview)
     }
@@ -134,7 +132,7 @@ extension AppBridgeViewController: WKUIDelegate, WKNavigationDelegate {
   func webView(_ webView: WKWebView, decidePolicyFor: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
   // @TODO: Check if we need to check with other types only (like submit)
   if decidePolicyFor.navigationType != .other {
-      self.channel.socket.close()
+      self.glue.close()
   }
     decisionHandler(.allow)
   }

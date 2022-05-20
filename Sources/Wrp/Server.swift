@@ -7,17 +7,17 @@ public final class WrpServer {
         self.host = host
     }
     
-    public static func create(configuration: WrpHost.Configuration) -> WrpServer {
-        let host: WrpHost = .init(channel: .init(socket: .init(glue: .init())), configuration: configuration)
+    public static func create(glue: WrpGlue, configuration: WrpHost.Configuration) -> WrpServer {
+        let host: WrpHost = .init(channel: .init(socket: .init(glue: glue)), configuration: configuration)
         return self.init(host: host)
     }
     
-    public func start() async {
+    public func start() async throws {
         print("WrpServer(start): Trying to start host")
-        await self.host.start()
+        try await self.host.start()
         print("WrpServer(start): Host started. server listening")
         await self.listen()
-        print("WrpServer(start): End")
+        print("WrpServer(start): Gracefully finished")
     }
     
     public func listen() async {

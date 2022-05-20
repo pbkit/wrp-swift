@@ -8,21 +8,15 @@ public class WrpSocket {
     
     init(glue: WrpGlue) {
         self.glue = glue
+        self.webView = self.glue.webView
+        print("debug: glue init")
     }
     
-    public func registerWebView(_ webView: WKWebView) {
-        self.webView = webView
-    }
-    
-    public func close() {
-        self.status = .closed
-    }
-    
-    public func handshake(interval: UInt32 = 500, limit: Int = 10) async {
+    public func handshake(interval: UInt32 = 500, limit: Int = 10) async throws {
         for _ in 0..<interval {
             guard let webView = self.webView else {
                 print("WrpSocket(handshake): No WebView")
-                continue;
+                throw SocketError.webViewError("Cannot find Webview")
             }
             do {
                 try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<(), Error>) in
@@ -60,7 +54,6 @@ public class WrpSocket {
                 }
                 continuation.finish()
             }
-            
         }
     }
     
@@ -96,6 +89,7 @@ public class WrpSocket {
     
     public enum SocketError: Error {
         case javascriptError(Error)
+        case webViewError(String)
         case uninitialized
     }
     

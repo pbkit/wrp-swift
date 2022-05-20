@@ -16,9 +16,8 @@ struct WrpApp: App {
 
 struct WrpAppView: View {
     let url: String
-    @State var server: WrpServer = .create(
-        configuration: .init(serviceProviders: [WrpTestServiceProvider()])
-    )
+    @State var glue: WrpGlue = WrpGlue()
+    @State var initNumber = 0
     
     init(url: String) {
         self.url = url
@@ -26,11 +25,18 @@ struct WrpAppView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
+            Text("\(initNumber)")
             WrpView(
                 urlString: self.url,
-                channel: server.host.channel
-            ).task {
-                await server.start()
+                glue: glue
+            ).task(id: initNumber) {
+                let server = WrpServer.create(glue: glue, configuration: .init(serviceProviders: [WrpTestServiceProvider()]))
+                do {
+                    try await server.start()
+                    initNumber += 1
+                } catch {
+                    print("WrpView(Error): \(error)")
+                }
             }
         }
     }

@@ -10,6 +10,7 @@ public class WrpChannel {
     public func listen() -> AsyncStream<Pbkit_Wrp_WrpMessage> {
         AsyncStream { continuation in
             Task.init {
+                print("WrpChannel(listen): Start")
                 for await var packet in self.socket.read() {
                     let length = packet.popFirst(4).reversed().reduce(0) { acc, curr in
                         acc << 4 + curr
@@ -22,6 +23,7 @@ public class WrpChannel {
                     continuation.yield(message)
                 }
                 continuation.finish()
+                print("WrpChannel(listen): End")
             }
         }
     }
