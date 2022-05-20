@@ -6,6 +6,8 @@ import SwiftProtobuf
 public protocol WrpHandlerProvider: AnyObject {
     var serviceName: Substring { get }
     
+    var methodNames: [Substring] { get }
+    
     func handle(methodName: Substring, context: WrpRequestContext) -> WrpServerHandlerProtocol?
 }
 

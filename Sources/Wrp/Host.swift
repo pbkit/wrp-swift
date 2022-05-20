@@ -23,9 +23,11 @@ public final class WrpHost {
     internal func sendInitialize() {
         self.channel.send(message: .with {
             $0.message = .hostInitialize(.with {
-                // @TODO: ServiceProvidersByName should contain methodNames
-                // $0.availableMethods = configuration.serviceProvidersByName.map { (name, _) in String(name) }
-                $0.availableMethods = ["pbkit.wrp.WrpTestService/Unary"]
+                $0.availableMethods = configuration.serviceProvidersByName.flatMap { (serviceName, serviceProvider) in
+                    serviceProvider.methodNames.map { methodName in
+                        serviceName + "/" + methodName
+                    }
+                }
             })
         })
     }

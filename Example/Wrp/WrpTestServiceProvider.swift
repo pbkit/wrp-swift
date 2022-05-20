@@ -11,6 +11,8 @@ public protocol Pbkit_WrpTestServiceProvider: WrpHandlerProvider {
 extension Pbkit_WrpTestServiceProvider {
     public var serviceName: Substring { return "pbkit.wrp.WrpTestService" }
     
+    public var methodNames: [Substring] { return ["Unary"] }
+    
     public func handle(methodName: Substring, context: WrpRequestContext) -> WrpServerHandlerProtocol? {
         switch methodName {
         case "Unary":
