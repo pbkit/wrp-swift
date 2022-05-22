@@ -12,15 +12,12 @@ public protocol WrpHandlerProvider: AnyObject {
 }
 
 public protocol WrpServerHandlerProtocol {
-  func call() -> WrpServerHandlerResult
+  func call(
+    header: AsyncStream<[String: String]>.Continuation,
+    trailer: AsyncStream<[String: String]>.Continuation,
+    payload: AsyncStream<Data>.Continuation
+  ) async
 }
-
-public struct WrpServerHandlerResult {
-  let header: AsyncStream<[String:String]>
-  let trailer: AsyncStream<[String:String]>
-  let payload: AsyncStream<Data>
-}
-
 
 public struct WrpRequestContext {
     let methodName: WrpRequestMethodIdentifier
@@ -34,6 +31,12 @@ public struct WrpRequestContext {
 public class WrpRequestMethodIdentifier {
   let serviceName: Substring
   let methodName: Substring
+  var fullName: String {
+    get { "\(serviceName)/\(methodName)" }
+  }
+  var description: String {
+    get { fullName }
+  }
   
   init(identifier: String) throws {
     let splitted = identifier.split(separator: "/")
@@ -53,7 +56,7 @@ public class WrpRequestMethodIdentifier {
 public struct MethodHandlerContext<Response: SwiftProtobuf.Message> {
   public let sendHeader: (_ header: [String:String]) -> ()
   public let sendMessage: (_ message: Response) -> ()
-  public let sendTrailer: (_ trailer: inout [String:String]) -> ()
+  public let sendTrailer: (_ trailer: [String:String] ) -> ()
 }
 
 public class WrpServerHandler<
@@ -73,14 +76,14 @@ public class WrpServerHandler<
   internal let context: WrpRequestContext
   
   @usableFromInline
-  internal let userFunction: (AsyncStream<Request>, MethodHandlerContext<Response>) -> ()
+  internal let userFunction: (AsyncStream<Request>, MethodHandlerContext<Response>) async -> ()
   
   @inlinable
   public init(
     context: WrpRequestContext,
     responseSerializer: Serializer,
     requestDeserializer: Deserializer,
-    userFunction: @escaping (AsyncStream<Request>,  MethodHandlerContext<Response>) -> ()
+    userFunction: @escaping (AsyncStream<Request>,  MethodHandlerContext<Response>) async -> ()
   ) {
     self.context = context
     self.serializer = responseSerializer
@@ -88,7 +91,11 @@ public class WrpServerHandler<
     self.userFunction = userFunction
   }
   
-  public func call() -> WrpServerHandlerResult {
+    public func call(
+        header: AsyncStream<[String: String]>.Continuation,
+        trailer: AsyncStream<[String: String]>.Continuation,
+        payload: AsyncStream<Data>.Continuation
+    ) async {
     let requestStream = AsyncStream<Request> { continuation in
       Task.init {
         for await data in context.request {
@@ -99,34 +106,25 @@ public class WrpServerHandler<
         continuation.finish()
       }
     }
-    let header = DeferStream<[String:String]>()
-    let trailer = DeferStream<[String:String]>()
-    let payload = DeferStream<Data>()
-    
-    self.userFunction(
+    await self.userFunction(
       requestStream,
       .init(
         sendHeader: {
-          header.continuation?.yield($0)
-          header.continuation?.finish()
+          header.yield($0)
+          header.finish()
         },
         sendMessage: { message in
+          print("WrpServerHandler(send/message): \(message)")
           if let data = try? message.serializedData() {
-            payload.continuation?.yield(data)
+            payload.yield(data)
           }
         },
         sendTrailer: {
-          payload.continuation?.finish()
-          trailer.continuation?.yield($0)
-          trailer.continuation?.finish()
+          payload.finish()
+          trailer.yield($0)
+          trailer.finish()
         }
       )
-    )
-    
-    return .init(
-      header: header.stream,
-      trailer: trailer.stream,
-      payload: payload.stream
     )
   }
 }

@@ -9,7 +9,7 @@ public class WrpGlue {
 
     public func recv(_ data: Data) {
         print("WrpGlue(recv): Received data")
-        queue.continuation?.yield(data)
+        queue.continuation.yield(data)
     }
     
     public func read() -> AsyncStream<Data> {
@@ -17,7 +17,7 @@ public class WrpGlue {
     }
     
     public func close() {
-        self.queue.continuation?.finish()
+        self.queue.continuation.finish()
         self.queue = .init()
     }
     

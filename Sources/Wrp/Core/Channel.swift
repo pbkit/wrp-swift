@@ -39,6 +39,7 @@ public class WrpChannel {
         var packet = Data()
         packet.append(length)
         packet.append(payload)
+        print("WrpChannel(send): \(packet.map { $0 })")
         socket.write(packet)
     }
 }

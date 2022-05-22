@@ -3,10 +3,10 @@ import Foundation
 import SwiftProtobuf
 
 public class DeferStream<T> {
-  let stream: AsyncStream<T>
-  var continuation: AsyncStream<T>.Continuation?
+  public let stream: AsyncStream<T>
+  public var continuation: AsyncStream<T>.Continuation!
     
-  init() {
+  public init() {
     var _continuataion: AsyncStream<T>.Continuation?
     self.stream = AsyncStream { continuation in
       _continuataion = continuation
@@ -28,7 +28,11 @@ extension Data {
         return first
     }
     
+    // "\r\n" is a grapheme cluster so escape \r (which value is 13) especially
     func toWrpPayloadString() -> String {
-        return String(String.UnicodeScalarView(self.map {v in UnicodeScalar(v)}))
+        return String(String.UnicodeScalarView(self.map {v in UnicodeScalar(v)})).unicodeScalars.map { scalar in
+            if scalar.value == 13 { return "\\r" }
+            return String(scalar)
+        }.joined()
     }
 }
