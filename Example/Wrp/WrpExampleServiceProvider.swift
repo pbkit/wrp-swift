@@ -2,13 +2,14 @@ import Wrp
 import Foundation
 import SwiftProtobuf
 import GRPC
+import SwiftUI
 
 public protocol Pbkit_WrpExampleServiceProvider: WrpHandlerProvider {
     var interceptors: Pbkit_Wrp_Example_WrpExampleServiceServerInterceptorFactoryProtocol? { get }
     
-    func getTextValue(request: AsyncStream<Pbkit_Wrp_Example_GetTextValueRequest>, context: MethodHandlerContext<Pbkit_Wrp_Example_GetTextValueResponse>)
+    func getTextValue(request: AsyncStream<Pbkit_Wrp_Example_GetTextValueRequest>, context: MethodHandlerContext<Pbkit_Wrp_Example_GetTextValueResponse>) async
 
-    func getSliderValue(request: AsyncStream<Pbkit_Wrp_Example_GetSliderValueRequest>, context: MethodHandlerContext<Pbkit_Wrp_Example_GetSliderValueResponse>)
+    func getSliderValue(request: AsyncStream<Pbkit_Wrp_Example_GetSliderValueRequest>, context: MethodHandlerContext<Pbkit_Wrp_Example_GetSliderValueResponse>) async
 }
 
 extension Pbkit_WrpExampleServiceProvider {
@@ -41,20 +42,37 @@ extension Pbkit_WrpExampleServiceProvider {
 class WrpExampleServiceProvider: Pbkit_WrpExampleServiceProvider {
     internal var interceptors: Pbkit_Wrp_Example_WrpExampleServiceServerInterceptorFactoryProtocol?
     
-    init() {}
+    var textValue: Binding<String>
+    var sliderValueStream: AsyncStream<Double>
     
-    func unary(
-        request: AsyncStream<Pbkit_Wrp_WrpUnaryRequest>,
-        context: MethodHandlerContext<Pbkit_Wrp_WrpUnaryResponse>
+    init(
+        textValue: Binding<String>,
+        sliderValueStream: AsyncStream<Double>
     ) {
-        Task.init {
-            context.sendHeader([:])
-            for await req in request {
-                print("WrpTestServiceProvider(Unary): Recv \(req.payload)")
-            }
-            context.sendMessage(.init())
-            var trailer = ["hi": "hello"]
-            context.sendTrailer(&trailer)
+        self.textValue = textValue
+        self.sliderValueStream = sliderValueStream
+    }
+    
+    func getTextValue(
+        request: AsyncStream<Pbkit_Wrp_Example_GetTextValueRequest>,
+        context: MethodHandlerContext<Pbkit_Wrp_Example_GetTextValueResponse>
+    ) async {
+        context.sendHeader([:])
+        context.sendMessage(.with {
+            $0.text = textValue.wrappedValue
+        })
+        context.sendTrailer([:])
+    }
+    
+    func getSliderValue(
+        request: AsyncStream<Pbkit_Wrp_Example_GetSliderValueRequest>,
+        context: MethodHandlerContext<Pbkit_Wrp_Example_GetSliderValueResponse>
+    ) async {
+        context.sendHeader([:])
+        for await sliderValue in sliderValueStream {
+            context.sendMessage(.with {
+                $0.value = Int32(sliderValue)
+            })
         }
     }
 }
