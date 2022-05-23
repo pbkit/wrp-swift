@@ -5,21 +5,21 @@ public class WrpSocket {
     public let glue: WrpGlue
     private var status: Status = .uninitialized
     private var webView: WKWebView?
-    
+
     init(glue: WrpGlue) {
         self.glue = glue
         self.webView = self.glue.webView
         print("debug: glue init")
     }
-    
+
     public func handshake(interval: UInt32 = 500, limit: Int = 10) async throws {
-        for _ in 0..<interval {
+        for _ in 0 ..< interval {
             guard let webView = self.webView else {
                 print("WrpSocket(handshake): No WebView")
                 throw SocketError.webViewError("Cannot find Webview")
             }
             do {
-                try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<(), Error>) in
+                try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
                     DispatchQueue.main.async {
                         // Trick for avoiding unexpected exception on valid result
                         webView.evaluateJavaScript("globalThis['<glue>'].toString()") { _, error in
@@ -40,7 +40,7 @@ public class WrpSocket {
             }
         }
     }
-    
+
     @discardableResult
     public func read() -> AsyncStream<Data> {
         AsyncStream { continuation in
@@ -56,43 +56,43 @@ public class WrpSocket {
             }
         }
     }
-    
+
     public func write(_ data: Data) {
-         DispatchQueue.main.async {
-             Task.init {
-                 assert(Thread.isMainThread, "WKWebView.evaluateJavaScript(_:completionHandler:) must be used from main thread only")
-                 
-                 guard let webView = self.webView else { return }
-                 
-                 let payload = data.encode()
-                 print("WrpSocket(write)(\(data.count), \(payload.count)): <glue>.recv(\(payload))")
-                     
-                 do {
-                     try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<(), Error>) in
-                         DispatchQueue.main.async {
-                             webView.evaluateJavaScript("void globalThis['<glue>'].recv(\(payload))") { _, error in
-                                 if let error = error {
-                                     continuation.resume(throwing: error)
-                                 } else {
-                                     continuation.resume()
-                                 }
-                             }
-                         }
-                     }
-                     print("WrpSocket(write): Sent Successfully!")
-                 } catch {
-                     print(error)
-                 }
-             }
-         }
+        DispatchQueue.main.async {
+            Task.init {
+                assert(Thread.isMainThread, "WKWebView.evaluateJavaScript(_:completionHandler:) must be used from main thread only")
+
+                guard let webView = self.webView else { return }
+
+                let payload = data.encode()
+                print("WrpSocket(write)(\(data.count), \(payload.count)): <glue>.recv(\(payload))")
+
+                do {
+                    try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+                        DispatchQueue.main.async {
+                            webView.evaluateJavaScript("void globalThis['<glue>'].recv(\(payload))") { _, error in
+                                if let error = error {
+                                    continuation.resume(throwing: error)
+                                } else {
+                                    continuation.resume()
+                                }
+                            }
+                        }
+                    }
+                    print("WrpSocket(write): Sent Successfully!")
+                } catch {
+                    print(error)
+                }
+            }
+        }
     }
-    
+
     public enum SocketError: Error {
         case javascriptError(Error)
         case webViewError(String)
         case uninitialized
     }
-    
+
     public enum Status {
         case initialized
         case uninitialized

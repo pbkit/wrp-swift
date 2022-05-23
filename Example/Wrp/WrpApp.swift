@@ -17,21 +17,21 @@ struct WrpApp: App {
 struct WrpAppView: View {
     let url: String
     @State var sliderValueStream: DeferStream<Double> = .init()
-    let glue: WrpGlue = WrpGlue()
+    let glue: WrpGlue = .init()
     @State var initNumber = 1
     @State var textValue = ""
     @State var sliderValue = 0.0
-    
+
     init(url: String) {
         self.url = url
     }
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             VStack {
                 Text("Initialize \(initNumber) times")
                 TextField("Text", text: $textValue)
-                Slider(value: $sliderValue, in: 0...100)
+                Slider(value: $sliderValue, in: 0 ... 100)
                 Text("\(sliderValue)")
             }.padding().background(.bar)
             WrpView(
@@ -39,7 +39,7 @@ struct WrpAppView: View {
                 glue: glue
             ).task(id: initNumber) {
                 let provider = WrpExampleServiceProvider(textValue: $textValue, sliderValueStream: sliderValueStream.stream)
-                
+
                 let server = WrpServer.create(glue: glue, configuration: .init(serviceProviders: [provider]))
                 do {
                     try await server.start()

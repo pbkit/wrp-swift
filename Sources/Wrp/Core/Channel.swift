@@ -2,11 +2,11 @@ import Foundation
 
 public class WrpChannel {
     public var socket: WrpSocket
-    
+
     init(socket: WrpSocket) {
         self.socket = socket
     }
-    
+
     public func listen() -> AsyncStream<Pbkit_Wrp_WrpMessage> {
         AsyncStream { continuation in
             Task.init {
@@ -16,7 +16,7 @@ public class WrpChannel {
                         acc << 4 + curr
                     }
                     let payload = packet.popFirst(Int(length))
-                    guard let message = try? Pbkit_Wrp_WrpMessage.init(contiguousBytes: payload) else {
+                    guard let message = try? Pbkit_Wrp_WrpMessage(contiguousBytes: payload) else {
                         continuation.yield(.init())
                         continue
                     }
@@ -27,8 +27,8 @@ public class WrpChannel {
             }
         }
     }
-    
-    public func send(message: Pbkit_Wrp_WrpMessage) -> () {
+
+    public func send(message: Pbkit_Wrp_WrpMessage) {
         guard let payload = try? message.serializedData() else {
             return
         }
@@ -40,6 +40,6 @@ public class WrpChannel {
         packet.append(length)
         packet.append(payload)
         print("WrpChannel(send): \(packet.map { $0 })")
-        socket.write(packet)
+        self.socket.write(packet)
     }
 }

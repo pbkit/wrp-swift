@@ -5,8 +5,8 @@ import SwiftProtobuf
 public final class WrpHost {
     public let channel: WrpChannel
     public let configuration: Configuration
-    private var requests: [String:DeferStream<Data>] = [:]
-    
+    private var requests: [String: DeferStream<Data>] = [:]
+
     public init(
         channel: WrpChannel,
         configuration: Configuration
@@ -14,12 +14,12 @@ public final class WrpHost {
         self.channel = channel
         self.configuration = configuration
     }
-    
+
     public func start() async throws {
         try await self.channel.socket.handshake()
-        sendInitialize()
+        self.sendInitialize()
     }
-    
+
     internal func sendInitialize() {
         self.channel.send(message: .with {
             $0.message = .hostInitialize(.with {
@@ -31,7 +31,7 @@ public final class WrpHost {
             })
         })
     }
-    
+
     public func listen() -> AsyncStream<WrpRequestContext> {
         return AsyncStream { continuation in
             Task.init {
@@ -50,11 +50,11 @@ public final class WrpHost {
                     }
                     switch message.message {
                     case .hostInitialize,
-                            .hostResStart,
-                            .hostResPayload,
-                            .hostResFinish:
+                         .hostResStart,
+                         .hostResPayload,
+                         .hostResFinish:
                         continue
-                    case let .guestReqStart(req):
+                    case .guestReqStart(let req):
                         print("WrpHost(listen/GuestReqStart): \(req)")
                         let requestStream = DeferStream<Data>()
                         self.requests[req.reqID] = requestStream
@@ -73,7 +73,6 @@ public final class WrpHost {
                                         $0.header = header
                                     })
                                 })
-                                return
                             },
                             sendPayload: { payload in
                                 self.channel.send(message: .with {
@@ -82,7 +81,6 @@ public final class WrpHost {
                                         $0.payload = payload
                                     })
                                 })
-                                return
                             },
                             sendTrailer: { trailer in
                                 if trailer["wrp-status"] == nil { trailer["wrp-status"] = "ok" }
@@ -93,11 +91,10 @@ public final class WrpHost {
                                         $0.trailer = trailer
                                     })
                                 })
-                                return
                             }
                         )
                         continuation.yield(wrpRequest)
-                    case let .guestReqPayload(req):
+                    case .guestReqPayload(let req):
                         print("WrpHost(listen/GuestReqPayload): \(req)")
                         if let requestStream = self.requests[req.reqID] {
                             requestStream.continuation?.yield(req.payload)
@@ -108,7 +105,7 @@ public final class WrpHost {
                                 })
                             })
                         }
-                    case let .guestReqFinish(req):
+                    case .guestReqFinish(let req):
                         print("WrpHost(listen/GuestReqFinish): \(req)")
                         if let requestStream = self.requests[req.reqID] {
                             requestStream.continuation?.finish()
@@ -132,8 +129,8 @@ public final class WrpHost {
     }
 }
 
-extension WrpHost {
-    public struct Configuration {
+public extension WrpHost {
+    struct Configuration {
         public var serviceProviders: [WrpHandlerProvider] {
             get {
                 return Array(self.serviceProvidersByName.values)
@@ -144,9 +141,10 @@ extension WrpHost {
                 )
             }
         }
+
         public var logger = Logger(label: "io.wrp", factory: { _ in SwiftLogNoOpLogHandler() })
         internal var serviceProvidersByName: [Substring: WrpHandlerProvider]
-        
+
         public init(
             serviceProviders: [WrpHandlerProvider],
             logger: Logger = Logger(label: "io.wrp", factory: { _ in SwiftLogNoOpLogHandler() })

@@ -6,10 +6,10 @@ let package = Package(
     name: "wrp-swift",
     platforms: [
         .macOS(.v10_15),
-        .iOS(.v13)
+        .iOS(.v13),
     ],
     products: [
-        .library(name: "Wrp", targets: ["Wrp"])
+        .library(name: "Wrp", targets: ["Wrp"]),
     ],
     dependencies: [
         // GRPC library for protobuf serializer/deserializer
@@ -31,6 +31,6 @@ let package = Package(
         .testTarget(
             name: "WrpTests",
             dependencies: ["Wrp"]
-        )
+        ),
     ]
 )
