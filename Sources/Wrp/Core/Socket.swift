@@ -64,13 +64,13 @@ public class WrpSocket {
                  
                  guard let webView = self.webView else { return }
                  
-                 let payload = data.toWrpPayloadString()
-                 print("WrpSocket(write)(\(data.count)): window['<glue>'].recv(`\(payload.map { $0 })`)")
+                 let payload = data.encode()
+                 print("WrpSocket(write)(\(data.count), \(payload.count)): <glue>.recv(\(payload))")
                      
                  do {
                      try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<(), Error>) in
                          DispatchQueue.main.async {
-                             webView.evaluateJavaScript("void globalThis['<glue>'].recv(`\(payload)`)") { _, error in
+                             webView.evaluateJavaScript("void globalThis['<glue>'].recv(\(payload))") { _, error in
                                  if let error = error {
                                      continuation.resume(throwing: error)
                                  } else {

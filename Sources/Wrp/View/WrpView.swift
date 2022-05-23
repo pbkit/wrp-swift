@@ -129,13 +129,9 @@ class AppBridgeViewController: UIViewController {
 
 
 extension AppBridgeViewController: WKUIDelegate, WKNavigationDelegate {
-  func webView(_ webView: WKWebView, decidePolicyFor: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
-  // @TODO: Check if we need to check with other types only (like submit)
-  if decidePolicyFor.navigationType != .other {
-      self.glue.close()
-  }
-    decisionHandler(.allow)
-  }
+    func webView(_ webView: WKWebView, didFinish: WKNavigation) {
+        self.glue.close()
+    }
     
   func webView(
     _ webView: WKWebView,

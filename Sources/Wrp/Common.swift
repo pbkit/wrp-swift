@@ -28,11 +28,9 @@ extension Data {
         return first
     }
     
-    // "\r\n" is a grapheme cluster so escape \r (which value is 13) especially
-    func toWrpPayloadString() -> String {
-        return String(String.UnicodeScalarView(self.map {v in UnicodeScalar(v)})).unicodeScalars.map { scalar in
-            if scalar.value == 13 { return "\\r" }
-            return String(scalar)
-        }.joined()
+    func encode() -> String {
+        let str = String(data: self, encoding: .isoLatin1)!
+        let json = try! JSONSerialization.data(withJSONObject: str, options: .fragmentsAllowed)
+        return String(data: json, encoding: .utf8)!
     }
 }
