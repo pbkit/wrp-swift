@@ -30,7 +30,7 @@ extension Pbkit_Wrp_Example_GetSliderValueResponse: SwiftProtobuf.Message, Swift
     public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
         while let fieldNumber = try decoder.nextFieldNumber() {
             switch fieldNumber {
-            case 1: try try decoder.decodeSingularInt32Field(value: &self.value)
+            case 1: try decoder.decodeSingularInt32Field(value: &self.value)
             default: break
             }
         }

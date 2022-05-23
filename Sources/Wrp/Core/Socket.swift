@@ -1,21 +1,21 @@
 import Foundation
+import Logging
 import WebKit
 
 public class WrpSocket {
     public let glue: WrpGlue
+    private var configuration: Configuration
     private var status: Status = .uninitialized
-    private var webView: WKWebView?
 
-    init(glue: WrpGlue) {
+    init(glue: WrpGlue, configuration: Configuration = .init()) {
         self.glue = glue
-        self.webView = self.glue.webView
-        print("debug: glue init")
+        self.configuration = configuration
     }
 
     public func handshake(interval: UInt32 = 500, limit: Int = 10) async throws {
-        for _ in 0 ..< interval {
-            guard let webView = self.webView else {
-                print("WrpSocket(handshake): No WebView")
+        for count in 0 ..< interval {
+            guard let webView = self.glue.webView else {
+                self.configuration.logger.debug("handshake: Cannot find WebView")
                 throw SocketError.webViewError("Cannot find Webview")
             }
             do {
@@ -32,10 +32,10 @@ public class WrpSocket {
                     }
                 }
                 self.status = .initialized
-                print("WrpSocket(handshake): Handshake complete!")
+                self.configuration.logger.debug("handshake: Completed")
                 return
             } catch {
-                print("WrpSocket(handshake): Retrying...")
+                self.configuration.logger.debug("handshake: Retrying \(count)/\(interval)")
                 try? await Task.sleep(nanoseconds: UInt64(interval * 1_000_000))
             }
         }
@@ -61,12 +61,9 @@ public class WrpSocket {
         DispatchQueue.main.async {
             Task.init {
                 assert(Thread.isMainThread, "WKWebView.evaluateJavaScript(_:completionHandler:) must be used from main thread only")
-
-                guard let webView = self.webView else { return }
-
+                guard let webView = self.glue.webView else { return }
                 let payload = data.encode()
-                print("WrpSocket(write)(\(data.count), \(payload.count)): <glue>.recv(\(payload))")
-
+                self.configuration.logger.debug("write(\(data.count), \(payload.count)): <glue>.recv(\(payload))")
                 do {
                     try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
                         DispatchQueue.main.async {
@@ -79,21 +76,35 @@ public class WrpSocket {
                             }
                         }
                     }
-                    print("WrpSocket(write): Sent Successfully!")
+                    self.configuration.logger.debug("write: Sent successfully")
                 } catch {
-                    print(error)
+                    self.configuration.logger.error("write: Error on evaluateJavascript \(error)")
                 }
             }
         }
     }
+}
 
-    public enum SocketError: Error {
+public extension WrpSocket {
+    struct Configuration {
+        public var logger: Logger
+        public init(
+            logger: Logger = .init(label: "io.wrp", factory: { _ in SwiftLogNoOpLogHandler() })
+        ) {
+            self.logger = logger
+            self.logger[metadataKey: "stage"] = "socket"
+        }
+    }
+}
+
+public extension WrpSocket {
+    enum SocketError: Error {
         case javascriptError(Error)
         case webViewError(String)
         case uninitialized
     }
 
-    public enum Status {
+    enum Status {
         case initialized
         case uninitialized
         case closed

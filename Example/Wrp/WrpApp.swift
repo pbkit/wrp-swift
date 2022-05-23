@@ -1,3 +1,4 @@
+import Logging
 import SwiftUI
 import Wrp
 
@@ -39,8 +40,8 @@ struct WrpAppView: View {
                 glue: glue
             ).task(id: initNumber) {
                 let provider = WrpExampleServiceProvider(textValue: $textValue, sliderValueStream: sliderValueStream.stream)
-
-                let server = WrpServer.create(glue: glue, configuration: .init(serviceProviders: [provider]))
+                let logger = Logger(label: "io.wrp")
+                let server = WrpServer.create(glue: glue, serviceProviders: [provider], logger: logger)
                 do {
                     try await server.start()
                     initNumber += 1

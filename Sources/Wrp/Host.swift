@@ -35,10 +35,11 @@ public final class WrpHost {
     public func listen() -> AsyncStream<WrpRequestContext> {
         return AsyncStream { continuation in
             Task.init {
-                print("WrpHost(listen): Start")
+                self.configuration.logger.info("Start listening")
                 for await message in self.channel.listen() {
-                    print("WrpHost(listen): Recv \(message)")
+                    self.configuration.logger.debug("Received \(message)")
                     guard message.message != nil else {
+                        self.configuration.logger.error("Received null message")
                         self.channel.send(message: .with {
                             $0.message = .hostError(
                                 .with {
@@ -54,68 +55,78 @@ public final class WrpHost {
                          .hostResPayload,
                          .hostResFinish:
                         continue
-                    case .guestReqStart(let req):
-                        print("WrpHost(listen/GuestReqStart): \(req)")
+                    case .guestReqStart(let request):
                         let requestStream = DeferStream<Data>()
-                        self.requests[req.reqID] = requestStream
-                        guard let methodName = try? WrpRequestMethodIdentifier(identifier: req.methodName) else {
-                            print("WrpHost(error): Invalid methodName \(req.methodName)")
+                        self.requests[request.reqID] = requestStream
+                        guard let methodName = try? WrpRequestMethodIdentifier(identifier: request.methodName) else {
+                            self.configuration.logger.error("Invalid methodName \(request.methodName)")
                             continue
                         }
-                        let wrpRequest = WrpRequestContext(
+                        var contextLogger = self.configuration.logger
+                        contextLogger[metadataKey: "stage"] = "Request"
+                        contextLogger[metadataKey: "requestId"] = "\(request.reqID)"
+                        let context = WrpRequestContext(
+                            requestId: request.reqID,
                             methodName: methodName,
-                            metadata: req.metadata,
+                            metadata: request.metadata,
                             request: requestStream.stream,
+                            logger: contextLogger,
                             sendHeader: { header in
-                                self.channel.send(message: .with {
+                                let message = Pbkit_Wrp_WrpMessage.with {
                                     $0.message = .hostResStart(.with {
-                                        $0.reqID = req.reqID
+                                        $0.reqID = request.reqID
                                         $0.header = header
                                     })
-                                })
+                                }
+                                self.channel.send(message: message)
+                                contextLogger.debug("send/header: \(message)")
                             },
                             sendPayload: { payload in
-                                self.channel.send(message: .with {
+                                let message = Pbkit_Wrp_WrpMessage.with {
                                     $0.message = .hostResPayload(.with {
-                                        $0.reqID = req.reqID
+                                        $0.reqID = request.reqID
                                         $0.payload = payload
                                     })
-                                })
+                                }
+                                self.channel.send(message: message)
+                                contextLogger.debug("send/payload: \(message)")
                             },
                             sendTrailer: { trailer in
                                 if trailer["wrp-status"] == nil { trailer["wrp-status"] = "ok" }
                                 if trailer["wrp-message"] == nil { trailer["wrp-message"] = "" }
-                                self.channel.send(message: .with {
+                                let message = Pbkit_Wrp_WrpMessage.with {
                                     $0.message = .hostResFinish(.with {
-                                        $0.reqID = req.reqID
+                                        $0.reqID = request.reqID
                                         $0.trailer = trailer
                                     })
-                                })
+                                }
+                                self.channel.send(message: message)
+                                contextLogger.debug("send/trailer: \(message)")
                             }
                         )
-                        continuation.yield(wrpRequest)
-                    case .guestReqPayload(let req):
-                        print("WrpHost(listen/GuestReqPayload): \(req)")
-                        if let requestStream = self.requests[req.reqID] {
-                            requestStream.continuation?.yield(req.payload)
+                        continuation.yield(context)
+                    case .guestReqPayload(let request):
+                        if let requestStream = self.requests[request.reqID] {
+                            requestStream.continuation?.yield(request.payload)
                         } else {
                             self.channel.send(message: .with {
                                 $0.message = .hostError(.with {
-                                    $0.message = "Received unexpected request payload for { reqId: \(req.reqID) }"
+                                    $0.message = "Received unexpected request payload for { reqId: \(request.reqID) }"
                                 })
                             })
+                            self.configuration.logger.error("Received unexpected request payload for { reqId: \(request.reqID) }")
                         }
-                    case .guestReqFinish(let req):
-                        print("WrpHost(listen/GuestReqFinish): \(req)")
-                        if let requestStream = self.requests[req.reqID] {
+                    case .guestReqFinish(let request):
+                        if let requestStream = self.requests[request.reqID] {
                             requestStream.continuation?.finish()
-                            self.requests.removeValue(forKey: req.reqID)
+                            self.requests.removeValue(forKey: request.reqID)
                         } else {
                             self.channel.send(message: .with {
                                 $0.message = .hostError(.with {
-                                    $0.message = "Received unexpected request finish for { reqId: \(req.reqID) }"
+                                    $0.message = "Received unexpected request finish for { reqId: \(request.reqID) }"
                                 })
                             })
+                            self.configuration.logger.error("Received unexpected request finish for { reqId: \(request.reqID) }")
                         }
                         continue
                     default:
@@ -123,7 +134,7 @@ public final class WrpHost {
                     }
                 }
                 continuation.finish()
-                print("WrpHost(listen): End")
+                self.configuration.logger.info("End")
             }
         }
     }
@@ -131,6 +142,8 @@ public final class WrpHost {
 
 public extension WrpHost {
     struct Configuration {
+        public var logger = Logger(label: "io.wrp", factory: { _ in SwiftLogNoOpLogHandler() })
+        internal var serviceProvidersByName: [Substring: WrpHandlerProvider]
         public var serviceProviders: [WrpHandlerProvider] {
             get {
                 return Array(self.serviceProvidersByName.values)
@@ -142,9 +155,6 @@ public extension WrpHost {
             }
         }
 
-        public var logger = Logger(label: "io.wrp", factory: { _ in SwiftLogNoOpLogHandler() })
-        internal var serviceProvidersByName: [Substring: WrpHandlerProvider]
-
         public init(
             serviceProviders: [WrpHandlerProvider],
             logger: Logger = Logger(label: "io.wrp", factory: { _ in SwiftLogNoOpLogHandler() })
@@ -153,6 +163,7 @@ public extension WrpHost {
                 .map { ($0.serviceName, $0) }
             )
             self.logger = logger
+            self.logger[metadataKey: "stage"] = "host"
         }
     }
 }

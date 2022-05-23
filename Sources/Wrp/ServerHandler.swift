@@ -20,9 +20,11 @@ public protocol WrpServerHandlerProtocol {
 }
 
 public struct WrpRequestContext {
+    let requestId: String
     let methodName: WrpRequestMethodIdentifier
     let metadata: [String: String]
     let request: AsyncStream<Data>
+    let logger: Logger
     let sendHeader: (_ header: [String: String]) -> Void
     let sendPayload: (_ payload: Data) -> Void
     let sendTrailer: (_ trailer: inout [String: String]) -> Void
@@ -110,10 +112,11 @@ public class WrpServerHandler<
                 sendHeader: {
                     header.yield($0)
                     header.finish()
+                    self.context.logger.trace("Send header \($0)")
                 },
                 sendMessage: { message in
-                    print("WrpServerHandler(send/message): \(message)")
                     if let data = try? message.serializedData() {
+                        self.context.logger.trace("Send message \(message)")
                         payload.yield(data)
                     }
                 },
@@ -121,6 +124,7 @@ public class WrpServerHandler<
                     payload.finish()
                     trailer.yield($0)
                     trailer.finish()
+                    self.context.logger.trace("Send trailer \($0)")
                 }
             )
         )

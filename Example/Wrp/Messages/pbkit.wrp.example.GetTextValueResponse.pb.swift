@@ -30,7 +30,7 @@ extension Pbkit_Wrp_Example_GetTextValueResponse: SwiftProtobuf.Message, SwiftPr
     public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
         while let fieldNumber = try decoder.nextFieldNumber() {
             switch fieldNumber {
-            case 1: try try decoder.decodeSingularStringField(value: &self.text)
+            case 1: try decoder.decodeSingularStringField(value: &self.text)
             default: break
             }
         }

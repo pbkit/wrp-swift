@@ -37,7 +37,6 @@ public struct WrpView: UIViewControllerRepresentable {
         public func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
             guard let payload = message.body as? String else { return }
             let data = Data(payload.unicodeScalars.map { v in UInt8(v.value) })
-            print("WrpWebView: Received message body: \(data.map { $0 })")
             self.parent.glue.recv(data)
         }
     }
@@ -66,7 +65,6 @@ class AppBridgeViewController: UIViewController {
         // @wrp: Inject glue to userContentController
         // WrpWeb can call this with `globalThis.webkit.messageHandlers.glue.postMessage`.
         controller.add(self.messageHandler, name: "glue")
-        print("WrpWebView: MessageHandler added")
 
         let configuration = self.configuration
         configuration.userContentController = controller

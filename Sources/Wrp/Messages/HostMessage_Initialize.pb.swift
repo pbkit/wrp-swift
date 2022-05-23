@@ -30,7 +30,7 @@ extension Pbkit_Wrp_WrpHostMessage_Initialize: SwiftProtobuf.Message, SwiftProto
     public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
         while let fieldNumber = try decoder.nextFieldNumber() {
             switch fieldNumber {
-            case 1: try try decoder.decodeRepeatedStringField(value: &self.availableMethods)
+            case 1: try decoder.decodeRepeatedStringField(value: &self.availableMethods)
             default: break
             }
         }

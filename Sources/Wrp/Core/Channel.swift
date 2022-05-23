@@ -1,16 +1,22 @@
 import Foundation
+import Logging
 
 public class WrpChannel {
     public var socket: WrpSocket
+    private let configuration: Configuration
 
-    init(socket: WrpSocket) {
+    public init(
+        socket: WrpSocket,
+        configuration: Configuration = .init()
+    ) {
         self.socket = socket
+        self.configuration = configuration
     }
 
     public func listen() -> AsyncStream<Pbkit_Wrp_WrpMessage> {
         AsyncStream { continuation in
             Task.init {
-                print("WrpChannel(listen): Start")
+                self.configuration.logger.debug("Start listening")
                 for await var packet in self.socket.read() {
                     let length = packet.popFirst(4).reversed().reduce(0) { acc, curr in
                         acc << 4 + curr
@@ -23,7 +29,7 @@ public class WrpChannel {
                     continuation.yield(message)
                 }
                 continuation.finish()
-                print("WrpChannel(listen): End")
+                self.configuration.logger.debug("End")
             }
         }
     }
@@ -39,7 +45,19 @@ public class WrpChannel {
         var packet = Data()
         packet.append(length)
         packet.append(payload)
-        print("WrpChannel(send): \(packet.map { $0 })")
+        self.configuration.logger.debug("Send: \(packet.map { $0 })")
         self.socket.write(packet)
+    }
+}
+
+public extension WrpChannel {
+    class Configuration {
+        public var logger: Logger
+        public init(
+            logger: Logger = .init(label: "io.wrp", factory: { _ in SwiftLogNoOpLogHandler() }))
+        {
+            self.logger = logger
+            self.logger[metadataKey: "stage"] = "channel"
+        }
     }
 }

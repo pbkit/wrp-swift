@@ -33,8 +33,8 @@ extension Pbkit_Wrp_WrpHostMessage_ResFinish: SwiftProtobuf.Message, SwiftProtob
     public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
         while let fieldNumber = try decoder.nextFieldNumber() {
             switch fieldNumber {
-            case 1: try try decoder.decodeSingularStringField(value: &self.reqID)
-            case 2: try { try decoder.decodeMapField(fieldType: SwiftProtobuf._ProtobufMap<SwiftProtobuf.ProtobufString, SwiftProtobuf.ProtobufString>.self, value: &self.trailer) }()
+            case 1: try decoder.decodeSingularStringField(value: &self.reqID)
+            case 2: try decoder.decodeMapField(fieldType: SwiftProtobuf._ProtobufMap<SwiftProtobuf.ProtobufString, SwiftProtobuf.ProtobufString>.self, value: &self.trailer)
             default: break
             }
         }
