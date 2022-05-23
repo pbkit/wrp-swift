@@ -8,7 +8,7 @@ public protocol WrpHandlerProvider: AnyObject {
     
     var methodNames: [Substring] { get }
     
-    func handle(methodName: Substring, context: WrpRequestContext) -> WrpServerHandlerProtocol?
+    func handle(method: Substring, context: WrpRequestContext) -> WrpServerHandlerProtocol?
 }
 
 public protocol WrpServerHandlerProtocol {
@@ -81,13 +81,13 @@ public class WrpServerHandler<
   @inlinable
   public init(
     context: WrpRequestContext,
-    responseSerializer: Serializer,
     requestDeserializer: Deserializer,
+    responseSerializer: Serializer,
     userFunction: @escaping (AsyncStream<Request>,  MethodHandlerContext<Response>) async -> ()
   ) {
     self.context = context
-    self.serializer = responseSerializer
     self.deserializer = requestDeserializer
+    self.serializer = responseSerializer
     self.userFunction = userFunction
   }
   

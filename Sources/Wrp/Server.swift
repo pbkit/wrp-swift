@@ -26,7 +26,7 @@ public final class WrpServer {
             for await context in host.listen() {
                 print("WrpServer(listen): Context recv \(context.methodName.fullName)")
                 guard let serviceProvider = host.configuration.serviceProvidersByName[context.methodName.serviceName],
-                      let handler = serviceProvider.handle(methodName: context.methodName.methodName, context: context) else {
+                      let handler = serviceProvider.handle(method: context.methodName.methodName, context: context) else {
                     var trailer = [
                         "wrp-status": "error",
                         "wrp-message": "Method not found: \(context.methodName.fullName)"
