@@ -2,7 +2,7 @@ public struct DeferStream<Element>: AsyncSequence {
     public typealias Stream = AsyncStream<Element>
     
     public var stream: Stream!
-    private var continuation: Stream.Continuation!
+    public var continuation: Stream.Continuation!
 
     public init() {
         self.stream = .init { self.continuation = $0 }
