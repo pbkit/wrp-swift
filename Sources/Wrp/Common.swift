@@ -2,19 +2,6 @@ import Foundation
 import SwiftProtobuf
 import WebKit
 
-public class DeferStream<T> {
-    public let stream: AsyncStream<T>
-    public var continuation: AsyncStream<T>.Continuation!
-
-    public init() {
-        var _continuataion: AsyncStream<T>.Continuation?
-        self.stream = AsyncStream { continuation in
-            _continuataion = continuation
-        }
-        self.continuation = _continuataion
-    }
-}
-
 extension Data {
     mutating func set(_ other: Data) {
         self.removeAll(keepingCapacity: true)
