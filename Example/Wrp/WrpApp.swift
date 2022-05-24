@@ -19,7 +19,7 @@ struct WrpAppView: View {
     let url: String
     @State var sliderValueStream: DeferStream<Double> = .init()
     let glue: WrpGlue = .init()
-    @State var initNumber = 1
+    @State var initNumber = 0
     @State var textValue = ""
     @State var sliderValue = 0.0
 
@@ -34,19 +34,23 @@ struct WrpAppView: View {
                 TextField("Text", text: $textValue)
                 Slider(value: $sliderValue, in: 0 ... 100)
                 Text("\(sliderValue)")
-            }.padding().background(.bar)
+            }.padding()
             WrpView(
                 urlString: self.url,
                 glue: glue
-            ).task(id: initNumber) {
-                let provider = WrpExampleServiceProvider(textValue: $textValue, sliderValueStream: sliderValueStream.stream)
-                let logger = Logger(label: "io.wrp")
-                let server = WrpServer.create(glue: glue, serviceProviders: [provider], logger: logger)
-                do {
-                    try await server.start()
-                    initNumber += 1
-                } catch {
-                    print("WrpView(Error): \(error)")
+            ).onAppear {
+                initNumber += 1
+            }.onChange(of: initNumber) { _ in
+                Task {
+                    let provider = WrpExampleServiceProvider(textValue: $textValue, sliderValueStream: sliderValueStream.stream)
+                    let logger = Logger(label: "io.wrp")
+                    let server = WrpServer.create(glue: glue, serviceProviders: [provider], logger: logger)
+                    do {
+                        try await server.start()
+                        initNumber += 1
+                    } catch {
+                        print("WrpView(Error): \(error)")
+                    }
                 }
             }.onChange(of: sliderValue) { value in
                 sliderValueStream.continuation?.yield(value)
