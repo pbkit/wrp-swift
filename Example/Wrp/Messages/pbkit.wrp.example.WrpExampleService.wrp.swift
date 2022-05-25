@@ -3,24 +3,24 @@ import SwiftProtobuf
 import Wrp
 
 public protocol Pbkit_Wrp_Example_WrpExampleServiceWrpClientProtocol: WrpClient {
-    func getTextValue(_ request: Pbkit_Wrp_Example_GetTextValueRequest) throws -> WrpUnaryCall<Pbkit_Wrp_Example_GetTextValueResponse>
+    func getTextValue(_ request: Pbkit_Wrp_Example_GetTextValueRequest) throws -> WrpUnaryResponse<Pbkit_Wrp_Example_GetTextValueResponse>
     
-    func getSliderValue(_ request: AsyncStream<Pbkit_Wrp_Example_GetSliderValueRequest>) throws -> WrpClientCall<Pbkit_Wrp_Example_GetSliderValueResponse>
+    func getSliderValue(_ request: Pbkit_Wrp_Example_GetSliderValueRequest) throws -> WrpStreamingResponse<Pbkit_Wrp_Example_GetSliderValueResponse>
 }
 
 extension Pbkit_Wrp_Example_WrpExampleServiceWrpClientProtocol {
     internal func getTextValue(
         _ request: Pbkit_Wrp_Example_GetTextValueRequest,
         callOptions: WrpClientCallOptions?
-    ) throws -> WrpUnaryCall<Pbkit_Wrp_Example_GetTextValueResponse> {
+    ) throws -> WrpUnaryResponse<Pbkit_Wrp_Example_GetTextValueResponse> {
         return try self.makeUnaryCall(path: "pbkit.wrp.example.WrpExampleService/GetTextValue", request: request)
     }
     
     internal func getSliderValue(
-        _ request: AsyncStream<Pbkit_Wrp_Example_GetSliderValueRequest>,
+        _ request: Pbkit_Wrp_Example_GetSliderValueRequest,
         callOptions: WrpClientCallOptions?
-    ) throws -> WrpClientCall<Pbkit_Wrp_Example_GetSliderValueResponse> {
-        return try self.call(path: "pbkit.wrp.example.WrpExampleService/GetSliderValue", request: request)
+    ) throws -> WrpStreamingResponse<Pbkit_Wrp_Example_GetSliderValueResponse> {
+        return try self.makeServerStreamingCall(path: "pbkit.wrp.example.WrpExampleService/GetSliderValue", request: request)
     }
 }
 

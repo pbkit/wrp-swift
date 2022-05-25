@@ -13,7 +13,7 @@ public extension WrpClient {
         path: String,
         request: Request,
         metadata: [String: String] = [:]
-    ) throws -> WrpUnaryCall<Response> {
+    ) throws -> WrpUnaryResponse<Response> {
         guard let method = try?
                 WrpRequestMethodIdentifier(identifier: path) else {
             throw WrpClientError.parseError(path)
@@ -59,48 +59,184 @@ public extension WrpClient {
             }
         }
         
-        return WrpUnaryCall(
+        return WrpUnaryResponse(
             header: header.toJust(),
             response: response.toJust(),
             trailer: trailer.toJust()
         )
     }
     
-    func call<Request: SwiftProtobuf.Message, Response: SwiftProtobuf.Message>(
+    func makeClientStreamingCall<
+        Request: SwiftProtobuf.Message,
+        Response: SwiftProtobuf.Message
+    >(
         path: String,
         request: AsyncStream<Request>,
-        metadata: [String: String]? = nil
-    ) throws -> WrpClientCall<Response> {
-        guard let method = try? WrpRequestMethodIdentifier(identifier: path) else {
+        metadata: [String: String] = [:]
+    ) throws -> WrpUnaryResponse<Response> {
+        guard let method = try?
+                WrpRequestMethodIdentifier(identifier: path) else {
             throw WrpClientError.parseError(path)
         }
         let context = self.guest.request(
             method: method,
-            request: AsyncStream<Data> { continuation in
-                Task {
-                    for await payload in request {
-                        if let data = try? payload.serializedData() {
-                            continuation.yield(data)
-                        }
-                    }
-                    continuation.finish()
+            request: request.compactMap { message in
+                if let data = try? message.serializedData() {
+                    return data
                 }
-            },
-            metadata: metadata ?? [:]
+                return nil
+            }.toAsyncStream(),
+            metadata: metadata
         )
-        return WrpClientCall(
-            header: context.header.stream,
-            response: AsyncStream<Response> { continuation in
-                Task {
-                    for await payload in context.payload.stream {
-                        if let response = try? Response(contiguousBytes: payload) {
-                            continuation.yield(response)
-                        }
+        let header = DeferJust<[String: String]>()
+        let response = DeferJust<Response>()
+        let trailer = DeferJust<[String: String]>()
+
+        Task {
+            await withTaskGroup(of: Void.self) { taskGroup in
+                taskGroup.addTask {
+                    guard let value = await context.header.stream.first() else {
+                        header.reject()
+                        return
                     }
-                    continuation.finish()
+                    header.resolve(value)
                 }
+                taskGroup.addTask {
+                    guard let data = await context.payload.stream.first(),
+                          let message = try? Response.init(contiguousBytes: data) else {
+                        response.reject()
+                        return
+                    }
+                    response.resolve(message)
+                }
+                taskGroup.addTask {
+                    guard let value = await context.header.stream.first() else {
+                        trailer.reject()
+                        return
+                    }
+                    trailer.resolve(value)
+                }
+            }
+        }
+        
+        return WrpUnaryResponse(
+            header: header.toJust(),
+            response: response.toJust(),
+            trailer: trailer.toJust()
+        )
+    }
+    
+    func makeServerStreamingCall<
+        Request: SwiftProtobuf.Message,
+        Response: SwiftProtobuf.Message
+    >(
+        path: String,
+        request: Request,
+        metadata: [String: String] = [:]
+    ) throws -> WrpStreamingResponse<Response> {
+        guard let method = try?
+                WrpRequestMethodIdentifier(identifier: path) else {
+            throw WrpClientError.parseError(path)
+        }
+        let context = self.guest.request(
+            method: method,
+            request: AsyncStream<Data> {
+                guard let data = try? request.serializedData() else {
+                    return nil
+                }
+                return data
             },
-            trailer: context.trailer.stream
+            metadata: metadata
+        )
+        let header = DeferJust<[String: String]>()
+        let response = context.payload.stream.compactMap { (payload) -> Response? in
+            guard let payload = try? Response.init(contiguousBytes: payload) else {
+                return nil
+            }
+            return payload
+        }.toAsyncStream()
+        let trailer = DeferJust<[String: String]>()
+
+        Task {
+            await withTaskGroup(of: Void.self) { taskGroup in
+                taskGroup.addTask {
+                    guard let value = await context.header.stream.first() else {
+                        header.reject()
+                        return
+                    }
+                    header.resolve(value)
+                }
+                taskGroup.addTask {
+                    guard let value = await context.header.stream.first() else {
+                        trailer.reject()
+                        return
+                    }
+                    trailer.resolve(value)
+                }
+            }
+        }
+        
+        return WrpStreamingResponse(
+            header: header.toJust(),
+            response: response,
+            trailer: trailer.toJust()
+        )
+    }
+    
+    func makeBidirectionalStreamingCall<
+        Request: SwiftProtobuf.Message,
+        Response: SwiftProtobuf.Message
+    >(
+        path: String,
+        request: AsyncStream<Request>,
+        metadata: [String: String] = [:]
+    ) throws -> WrpStreamingResponse<Response> {
+        guard let method = try?
+                WrpRequestMethodIdentifier(identifier: path) else {
+            throw WrpClientError.parseError(path)
+        }
+        let context = self.guest.request(
+            method: method,
+            request: request.compactMap { message in
+                if let data = try? message.serializedData() {
+                    return data
+                }
+                return nil
+            }.toAsyncStream(),
+            metadata: metadata
+        )
+        let header = DeferJust<[String: String]>()
+        let response = context.payload.stream.compactMap { (payload) -> Response? in
+            guard let payload = try? Response.init(contiguousBytes: payload) else {
+                return nil
+            }
+            return payload
+        }.toAsyncStream()
+        let trailer = DeferJust<[String: String]>()
+
+        Task {
+            await withTaskGroup(of: Void.self) { taskGroup in
+                taskGroup.addTask {
+                    guard let value = await context.header.stream.first() else {
+                        header.reject()
+                        return
+                    }
+                    header.resolve(value)
+                }
+                taskGroup.addTask {
+                    guard let value = await context.header.stream.first() else {
+                        trailer.reject()
+                        return
+                    }
+                    trailer.resolve(value)
+                }
+            }
+        }
+        
+        return WrpStreamingResponse(
+            header: header.toJust(),
+            response: response,
+            trailer: trailer.toJust()
         )
     }
 }
@@ -121,10 +257,18 @@ public struct WrpClientCallOptions {
     public var customMetadata: [String: String]
 }
 
-public struct WrpUnaryCall<
+public struct WrpUnaryResponse<
     Response: SwiftProtobuf.Message
 > {
     var header: Just<[String: String]>
     var response: Just<Response>
+    var trailer: Just<[String: String]>
+}
+
+public struct WrpStreamingResponse<
+    Response: SwiftProtobuf.Message
+> {
+    var header: Just<[String: String]>
+    var response: AsyncStream<Response>
     var trailer: Just<[String: String]>
 }
