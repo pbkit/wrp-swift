@@ -33,7 +33,7 @@ struct WrpAppView: View {
     @State var sliderValue = 0.0
     @State var responseSliderValue = 0
 
-    @State var wrpExampleClient: Pbkit_Wrp_Example_WrpExampleServiceClient!
+    @State var wrpExampleClient: Pbkit_Wrp_Example_WrpExampleServiceWrpClient!
 
     init(url: String) {
         self.url = url
@@ -81,7 +81,7 @@ struct WrpAppView: View {
                             var logger = Logger(label: "io.wrp.client")
                             logger.logLevel = .debug
                             let client = WrpClient.create(glue: glue, logger: logger)
-                            self.wrpExampleClient = Pbkit_Wrp_Example_WrpExampleServiceClient(client: client)
+                            self.wrpExampleClient = Pbkit_Wrp_Example_WrpExampleServiceWrpClient(client: client)
                             try? await client.start()
                         }
                         taskGroup.addTask {
@@ -115,7 +115,7 @@ struct WrpClientAppView: View {
     @State var textValue = ""
     @State var sliderValue = 0.0
 
-    @State var wrpExampleClient: Pbkit_Wrp_Example_WrpExampleServiceClient!
+    @State var wrpExampleClient: Pbkit_Wrp_Example_WrpExampleServiceWrpClient!
 
     init(url: String) {
         self.url = url
@@ -159,7 +159,7 @@ struct WrpClientAppView: View {
                     var logger = Logger(label: "io.wrp")
                     logger.logLevel = .debug
                     let client = WrpClient.create(glue: glue, logger: logger)
-                    self.wrpExampleClient = Pbkit_Wrp_Example_WrpExampleServiceClient(client: client)
+                    self.wrpExampleClient = Pbkit_Wrp_Example_WrpExampleServiceWrpClient(client: client)
                     try? await client.start()
                 }
             }
