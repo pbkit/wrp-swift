@@ -70,7 +70,10 @@ public final class WrpGuest {
         request payload: AsyncStream<Data>,
         metadata: [String: String]
     ) -> RequestContext {
-        let requestId = "\(self.requestIdCounter += 1)"
+        let requestId: String = {
+            self.requestIdCounter += 1
+            return "\(self.requestIdCounter)"
+        }()
         self.channel.send(message: .with {
             $0.message = .guestReqStart(.with {
                 $0.reqID = requestId

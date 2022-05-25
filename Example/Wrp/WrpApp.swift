@@ -31,6 +31,7 @@ struct WrpAppView: View {
     @State var initNumber = 0
     @State var textValue = ""
     @State var sliderValue = 0.0
+    @State var responseSliderValue = 0
 
     @State var wrpExampleClient: Pbkit_Wrp_Example_WrpExampleServiceClient!
 
@@ -44,7 +45,7 @@ struct WrpAppView: View {
                 Text("Initialize \(initNumber) times")
                 TextField("Text", text: $textValue)
                 Slider(value: $sliderValue, in: 0 ... 100)
-                Text("\(sliderValue)")
+                Text("\(responseSliderValue)")
                 HStack {
                     Button("GetTextValue", action: {
                         if let response = try? wrpExampleClient.getTextValue(.init()) {
@@ -60,7 +61,7 @@ struct WrpAppView: View {
                         if let response = try? wrpExampleClient.getSliderValue(.init()) {
                             Task {
                                 for try await res in response.response {
-                                    sliderValue = Double(res.value)
+                                    responseSliderValue = Int(res.value)
                                 }
                             }
                         }
@@ -194,7 +195,8 @@ struct WrpServerAppView: View {
             }.onChange(of: initNumber) { _ in
                 Task {
                     let provider = WrpExampleServiceProvider(textValue: $textValue, sliderValueStream: sliderValueStream.stream)
-                    let logger = Logger(label: "io.wrp")
+                    var logger = Logger(label: "io.wrp.server")
+                    logger.logLevel = .debug
                     let server = WrpServer.create(glue: glue, serviceProviders: [provider], logger: logger)
                     do {
                         try await server.start()
