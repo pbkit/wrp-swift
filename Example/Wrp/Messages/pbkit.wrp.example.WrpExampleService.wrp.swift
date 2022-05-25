@@ -2,25 +2,40 @@ import GRPC
 import SwiftProtobuf
 import Wrp
 
-public protocol Pbkit_Wrp_Example_WrpExampleServiceWrpClientProtocol: WrpClient {
-    func getTextValue(_ request: Pbkit_Wrp_Example_GetTextValueRequest) throws -> WrpUnaryResponse<Pbkit_Wrp_Example_GetTextValueResponse>
-    
-    func getSliderValue(_ request: Pbkit_Wrp_Example_GetSliderValueRequest) throws -> WrpStreamingResponse<Pbkit_Wrp_Example_GetSliderValueResponse>
+internal protocol Pbkit_Wrp_Example_WrpExampleServiceWrpClientProtocol {
+    var client: WrpClient { get }
+
+    func getTextValue(
+        _ request: Pbkit_Wrp_Example_GetTextValueRequest,
+        callOptions: WrpClientCallOptions?
+    ) throws -> WrpUnaryResponse<Pbkit_Wrp_Example_GetTextValueResponse>
+
+    func getSliderValue(_ request: Pbkit_Wrp_Example_GetSliderValueRequest, callOptions: WrpClientCallOptions?) throws -> WrpStreamingResponse<Pbkit_Wrp_Example_GetSliderValueResponse>
 }
 
 extension Pbkit_Wrp_Example_WrpExampleServiceWrpClientProtocol {
-    internal func getTextValue(
+    func getTextValue(
         _ request: Pbkit_Wrp_Example_GetTextValueRequest,
-        callOptions: WrpClientCallOptions?
+        callOptions: WrpClientCallOptions? = nil
     ) throws -> WrpUnaryResponse<Pbkit_Wrp_Example_GetTextValueResponse> {
-        return try self.makeUnaryCall(path: "pbkit.wrp.example.WrpExampleService/GetTextValue", request: request)
+        return try self.client.makeUnaryCall(path: "pbkit.wrp.example.WrpExampleService/GetTextValue", request: request)
     }
-    
-    internal func getSliderValue(
+
+    func getSliderValue(
         _ request: Pbkit_Wrp_Example_GetSliderValueRequest,
-        callOptions: WrpClientCallOptions?
+        callOptions: WrpClientCallOptions? = nil
     ) throws -> WrpStreamingResponse<Pbkit_Wrp_Example_GetSliderValueResponse> {
-        return try self.makeServerStreamingCall(path: "pbkit.wrp.example.WrpExampleService/GetSliderValue", request: request)
+        return try self.client.makeServerStreamingCall(path: "pbkit.wrp.example.WrpExampleService/GetSliderValue", request: request)
+    }
+}
+
+public final class Pbkit_Wrp_Example_WrpExampleServiceClient: Pbkit_Wrp_Example_WrpExampleServiceWrpClientProtocol {
+    public let client: WrpClient
+
+    public init(
+        client: WrpClient
+    ) {
+        self.client = client
     }
 }
 

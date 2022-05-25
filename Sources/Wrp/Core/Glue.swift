@@ -5,12 +5,14 @@ import WebKit
 public class WrpGlue {
     public var webView: WKWebView?
     private var queue: DeferStream<Data> = .init()
+    private var sharedSequence: SharedAsyncSequence<AsyncStream<Data>>
     private let configuration: Configuration
 
     public init(
         configuration: Configuration = .init()
     ) {
         self.configuration = configuration
+        self.sharedSequence = self.queue.stream.shared()
     }
 
     public func recv(_ data: Data) {
@@ -19,13 +21,17 @@ public class WrpGlue {
     }
 
     public func read() -> AsyncStream<Data> {
-        return self.queue.stream
+        return .init { [self] in
+            var iterator = sharedSequence.makeAsyncIterator()
+            return try? await iterator.next()
+        }
     }
 
     public func close() {
         self.queue.continuation.finish()
         self.configuration.logger.debug("Closed")
         self.queue = .init()
+        self.sharedSequence = self.queue.stream.shared()
     }
 
     public func registerWebView(_ webView: WKWebView) {

@@ -1,4 +1,5 @@
 import Foundation
+import Logging
 
 public final class WrpGuest {
     public let channel: WrpChannel
@@ -6,11 +7,13 @@ public final class WrpGuest {
     public var availableMethods: [WrpRequestMethodIdentifier] = []
     private var requests: [String: RequestContext] = [:]
     private var requestIdCounter = 0
-    private let configuration: Configuration = .init()
+    private let configuration: Configuration
     public init(
-        channel: WrpChannel
+        channel: WrpChannel,
+        configuration: Configuration = .init()
     ) {
         self.channel = channel
+        self.configuration = configuration
     }
 
     public func start() async throws {
@@ -112,11 +115,14 @@ public extension WrpGuest {
 
 public extension WrpGuest {
     struct Configuration {
+        public var logger: Logger
         public var onError: ((String) -> Void)?
 
-        public init(
-            onError: ((String) -> Void)? = nil
-        ) {
+        public init(logger: Logger = .init(label: "io.wrp", factory: { _ in SwiftLogNoOpLogHandler() }),
+                    onError: ((String) -> Void)? = nil)
+        {
+            self.logger = logger
+            self.logger[metadataKey: "stage"] = "guest"
             self.onError = onError
         }
     }

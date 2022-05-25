@@ -4,9 +4,9 @@ public struct Just<Element>: AsyncSequence {
     public init(
         _ build: (Continuation) -> Void
     ) {
-        build(Continuation.init(continuation: deferJust.continuation))
+        build(Continuation(continuation: self.deferJust.continuation))
     }
-    
+
     public init(
         unfolding produce: @escaping () async -> Element?
     ) {
@@ -18,22 +18,25 @@ public struct Just<Element>: AsyncSequence {
             self.deferJust.resolve(value)
         }
     }
-    
+
     public func makeAsyncIterator() -> DeferJust<Element>.Stream.Iterator {
-        deferJust.makeAsyncIterator()
+        self.deferJust.makeAsyncIterator()
     }
-    
+
     public struct Continuation: Sendable {
         var continuation: DeferJust<Element>.Stream.Continuation
         public func resolve(_ element: Element) {
             self.continuation.finish(with: element)
         }
+
         public func reject(throwing error: Error) {
             self.continuation.finish(throwing: error)
         }
+
         public init(
-            continuation: DeferJust<Element>.Stream.Continuation) {
-                self.continuation = continuation
-            }
+            continuation: DeferJust<Element>.Stream.Continuation)
+        {
+            self.continuation = continuation
+        }
     }
 }
