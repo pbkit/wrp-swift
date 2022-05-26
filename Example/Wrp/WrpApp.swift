@@ -10,16 +10,17 @@ struct WrpApp: App {
                 WrpAppView(url: "http://localhost:8000/wrp-example")
                     .tabItem {
                         Text("Bidirectional")
-                    }
+                    }.background(Color.gray.opacity(0.1).ignoresSafeArea())
                 WrpServerAppView(url: "http://localhost:8000/wrp-example-guest")
                     .tabItem {
                         Text("Server")
-                    }
+                    }.background(Color.gray.opacity(0.1).ignoresSafeArea())
                 WrpClientAppView(url: "http://localhost:8000/wrp-example-host")
                     .tabItem {
                         Text("Client")
-                    }
+                    }.background(Color.gray.opacity(0.1).ignoresSafeArea())
             }
+            
         }
     }
 }
@@ -29,8 +30,11 @@ struct WrpAppView: View {
     @State var sliderValueStream: DeferStream<Double> = .init()
     let glue: WrpGlue = .init()
     @State var initNumber = 0
+    
     @State var textValue = ""
     @State var sliderValue = 0.0
+    
+    @State var responseTextValue = ""
     @State var responseSliderValue = 0
 
     @State var wrpExampleClient: Pbkit_Wrp_Example_WrpExampleServiceWrpClient!
@@ -40,34 +44,59 @@ struct WrpAppView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            VStack {
+        VStack(alignment: .center, spacing: 0) {
+            Text("Bidirectional (both server/client)").fontWeight(.semibold)
+            VStack(alignment: .center, spacing: 0) {
                 Text("Initialize \(initNumber) times")
-                TextField("Text", text: $textValue)
-                Slider(value: $sliderValue, in: 0 ... 100)
-                Text("\(responseSliderValue)")
-                HStack {
-                    Button("GetTextValue", action: {
-                        if let response = try? wrpExampleClient.getTextValue(.init()) {
-                            Task {
-                                for try await res in response.response {
-                                    print("adsfsdafasdfd")
-                                    textValue = res.text
+                VStack {
+                    Divider()
+                    Text("Server Inputs").fontWeight(.semibold)
+                    HStack {
+                        Text("Text")
+                    TextField("TextValue", text: $textValue)
+                    }
+                    HStack {
+                        Text("Slider")
+                        Slider(value: $sliderValue, in: 0 ... 100)
+                    }
+                    Divider()
+                }.padding(.top)
+                VStack {
+                    Text("Server Response").fontWeight(.semibold)
+                    VStack(alignment: .leading) {
+                        Text("TextValue: \(responseTextValue)")
+                        HStack {
+                            Spacer()
+                        }
+                        Text("SliderValue: \(responseSliderValue)")
+                    }
+                    HStack {
+                        Button("GetTextValue", action: {
+                            if let response = try? wrpExampleClient.getTextValue(.init()) {
+                                Task {
+                                    for try await res in response.response {
+                                        responseTextValue = res.text
+                                    }
                                 }
                             }
-                        }
-                    })
-                    Button("GetSliderValue", action: {
-                        if let response = try? wrpExampleClient.getSliderValue(.init()) {
-                            Task {
-                                for try await res in response.response {
-                                    responseSliderValue = Int(res.value)
+                        }).buttonStyle(
+                            WrpButtonStyle(color: Color.blue.opacity(0.7))
+                        )
+                        Button("GetSliderValue", action: {
+                            if let response = try? wrpExampleClient.getSliderValue(.init()) {
+                                Task {
+                                    for try await res in response.response {
+                                        responseSliderValue = Int(res.value)
+                                    }
                                 }
                             }
-                        }
-                    })
-                }
+                        }).buttonStyle(
+                            WrpButtonStyle(color: Color.orange.opacity(0.7))
+                        )
+                    }
+                }.padding([.top])
             }.padding()
+            Divider()
             WrpView(
                 urlString: self.url,
                 glue: glue
@@ -108,12 +137,23 @@ struct WrpAppView: View {
     }
 }
 
+#if DEBUG
+struct WrpAppViewPreview: PreviewProvider {
+    static var previews: some View {
+        Group {
+            WrpAppView(url: "http://localhost:8000/wrp-example")
+        }
+    }
+}
+#endif
+
 struct WrpClientAppView: View {
     let url: String
     let glue: WrpGlue = .init()
     @State var initNumber = 0
-    @State var textValue = ""
-    @State var sliderValue = 0.0
+    
+    @State var responseTextValue = ""
+    @State var responseSliderValue = 0
 
     @State var wrpExampleClient: Pbkit_Wrp_Example_WrpExampleServiceWrpClient!
 
@@ -122,33 +162,47 @@ struct WrpClientAppView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            VStack {
+        VStack(alignment: .center, spacing: 0) {
+            Text("Client (<-> WebView Server)").fontWeight(.semibold)
+            VStack(alignment: .center, spacing: 0) {
                 Text("Initialize \(initNumber) times")
-                TextField("Text", text: $textValue)
-                Slider(value: $sliderValue, in: 0 ... 100)
-                Text("\(sliderValue)")
-                HStack {
-                    Button("GetTextValue", action: {
-                        if let response = try? wrpExampleClient.getTextValue(.init()) {
-                            Task {
-                                for try await res in response.response {
-                                    textValue = res.text
+                VStack {
+                    Divider()
+                    Text("Server Response").fontWeight(.semibold)
+                    VStack(alignment: .leading) {
+                        Text("TextValue: \(responseTextValue)")
+                        HStack {
+                            Spacer()
+                        }
+                        Text("SliderValue: \(responseSliderValue)")
+                    }
+                    HStack {
+                        Button("GetTextValue", action: {
+                            if let response = try? wrpExampleClient.getTextValue(.init()) {
+                                Task {
+                                    for try await res in response.response {
+                                        responseTextValue = res.text
+                                    }
                                 }
                             }
-                        }
-                    })
-                    Button("GetSliderValue", action: {
-                        if let response = try? wrpExampleClient.getSliderValue(.init()) {
-                            Task {
-                                for try await res in response.response {
-                                    sliderValue = Double(res.value)
+                        }).buttonStyle(
+                            WrpButtonStyle(color: Color.blue.opacity(0.7))
+                        )
+                        Button("GetSliderValue", action: {
+                            if let response = try? wrpExampleClient.getSliderValue(.init()) {
+                                Task {
+                                    for try await res in response.response {
+                                        responseSliderValue = Int(res.value)
+                                    }
                                 }
                             }
-                        }
-                    })
-                }
+                        }).buttonStyle(
+                            WrpButtonStyle(color: Color.orange.opacity(0.7))
+                        )
+                    }
+                }.padding([.top])
             }.padding()
+            Divider()
             WrpView(
                 urlString: self.url,
                 glue: glue
@@ -167,6 +221,15 @@ struct WrpClientAppView: View {
     }
 }
 
+#if DEBUG
+struct WrpClientAppViewPreview: PreviewProvider {
+    static var previews: some View {
+        WrpClientAppView(url: "http://localhost:8000/wrp-example-host")
+    }
+}
+#endif
+
+
 struct WrpServerAppView: View {
     let url: String
     @State var sliderValueStream: DeferStream<Double> = .init()
@@ -180,13 +243,24 @@ struct WrpServerAppView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            VStack {
+        VStack(alignment: .center, spacing: 0) {
+            Text("Server (<-> WebView Client)").fontWeight(.semibold)
+            VStack(alignment: .center, spacing: 0) {
                 Text("Initialize \(initNumber) times")
-                TextField("Text", text: $textValue)
-                Slider(value: $sliderValue, in: 0 ... 100)
-                Text("\(sliderValue)")
+                VStack {
+                    Divider()
+                    Text("Server Inputs").fontWeight(.semibold)
+                    HStack {
+                        Text("Text")
+                    TextField("TextValue", text: $textValue)
+                    }
+                    HStack {
+                        Text("Slider")
+                        Slider(value: $sliderValue, in: 0 ... 100)
+                    }
+                }.padding(.top)
             }.padding()
+            Divider()
             WrpView(
                 urlString: self.url,
                 glue: glue
@@ -213,3 +287,11 @@ struct WrpServerAppView: View {
         }
     }
 }
+
+#if DEBUG
+struct WrpServerAppViewPreview: PreviewProvider {
+    static var previews: some View {
+        WrpServerAppView(url: "http://localhost:8000/wrp-example-guest")
+    }
+}
+#endif
