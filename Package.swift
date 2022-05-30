@@ -26,7 +26,8 @@ let package = Package(
                 .product(name: "GRPC", package: "grpc-swift"),
                 .product(name: "SwiftProtobuf", package: "swift-protobuf"),
                 .product(name: "Logging", package: "swift-log"),
-            ]
+            ],
+            exclude: ["Messages/wrp.proto"]
         ),
         .testTarget(
             name: "WrpTests",

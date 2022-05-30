@@ -1,0 +1,16 @@
+syntax = "proto3";
+package pbkit.wrp.example;
+
+service WrpExampleService {
+  rpc GetTextValue(GetTextValueRequest) returns (GetTextValueResponse);
+  rpc GetSliderValue(GetSliderValueRequest) returns (stream GetSliderValueResponse);
+}
+
+message GetTextValueRequest {}
+message GetTextValueResponse {
+  string text = 1;
+}
+message GetSliderValueRequest {}
+message GetSliderValueResponse {
+  int32 value = 1;
+}
