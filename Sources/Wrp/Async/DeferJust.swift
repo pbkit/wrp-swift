@@ -1,8 +1,9 @@
 public struct DeferJust<Element>: AsyncSequence {
     public typealias Stream = AsyncThrowingStream<Element, Error>
+    public typealias Continuation = Stream.Continuation
 
     public var stream: Stream!
-    public var continuation: Stream.Continuation!
+    public var continuation: Continuation!
 
     public init() {
         self.stream = .init { self.continuation = $0 }

@@ -7,6 +7,6 @@ struct WrpButtonStyle: ButtonStyle {
             .font(.body.bold())
             .foregroundColor(.white)
             .padding()
-            .background((configuration.isPressed ? color.opacity(0.9) : color).cornerRadius(4))
+            .background((configuration.isPressed ? self.color.opacity(0.9) : self.color).cornerRadius(4))
     }
 }

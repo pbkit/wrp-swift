@@ -4,7 +4,7 @@ import Logging
 public final class WrpGuest {
     public let channel: WrpChannel
     public let availableMethodsDeferStream: DeferStream<Void> = .init()
-    public var availableMethods: [WrpRequestMethodIdentifier] = []
+    public var availableMethods: [WrpMethodIdentifier] = []
     private var requests: [String: RequestContext] = [:]
     private var requestIdCounter = 0
     private let configuration: Configuration
@@ -27,7 +27,7 @@ public final class WrpGuest {
                 switch message.message {
                 case .hostInitialize(let message):
                     self.availableMethods = message.availableMethods.map { identifier in
-                        try! WrpRequestMethodIdentifier(identifier: identifier)
+                        try! WrpMethodIdentifier(identifier: identifier)
                     }
                     availableMethodsDeferStream.continuation.finish()
                     continue
@@ -66,7 +66,7 @@ public final class WrpGuest {
     }
 
     public func request(
-        method name: WrpRequestMethodIdentifier,
+        method name: WrpMethodIdentifier,
         request payload: AsyncStream<Data>,
         metadata: [String: String]
     ) -> RequestContext {

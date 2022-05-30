@@ -32,7 +32,7 @@ public final class WrpHost {
         })
     }
 
-    public func listen() -> AsyncStream<WrpRequestContext> {
+    public func listen() -> AsyncStream<WrpRequestHandlerContext> {
         return AsyncStream { continuation in
             Task.init {
                 self.configuration.logger.info("Start listening")
@@ -58,14 +58,14 @@ public final class WrpHost {
                     case .guestReqStart(let request):
                         let requestStream = DeferStream<Data>()
                         self.requests[request.reqID] = requestStream
-                        guard let methodName = try? WrpRequestMethodIdentifier(identifier: request.methodName) else {
+                        guard let methodName = try? WrpMethodIdentifier(identifier: request.methodName) else {
                             self.configuration.logger.error("Invalid methodName \(request.methodName)")
                             continue
                         }
                         var contextLogger = self.configuration.logger
                         contextLogger[metadataKey: "stage"] = "Request"
                         contextLogger[metadataKey: "requestId"] = "\(request.reqID)"
-                        let context = WrpRequestContext(
+                        let context = WrpRequestHandlerContext(
                             requestId: request.reqID,
                             methodName: methodName,
                             metadata: request.metadata,
@@ -92,6 +92,7 @@ public final class WrpHost {
                                 contextLogger.debug("send/payload: \(message)")
                             },
                             sendTrailer: { trailer in
+                                var trailer = trailer
                                 if trailer["wrp-status"] == nil { trailer["wrp-status"] = "ok" }
                                 if trailer["wrp-message"] == nil { trailer["wrp-message"] = "" }
                                 let message = Pbkit_Wrp_WrpMessage.with {
@@ -143,8 +144,8 @@ public final class WrpHost {
 public extension WrpHost {
     struct Configuration {
         public var logger = Logger(label: "io.wrp", factory: { _ in SwiftLogNoOpLogHandler() })
-        internal var serviceProvidersByName: [Substring: WrpHandlerProvider]
-        public var serviceProviders: [WrpHandlerProvider] {
+        internal var serviceProvidersByName: [Substring: WrpServiceProvider]
+        public var serviceProviders: [WrpServiceProvider] {
             get {
                 return Array(self.serviceProvidersByName.values)
             }
@@ -156,7 +157,7 @@ public extension WrpHost {
         }
 
         public init(
-            serviceProviders: [WrpHandlerProvider],
+            serviceProviders: [WrpServiceProvider],
             logger: Logger = Logger(label: "io.wrp", factory: { _ in SwiftLogNoOpLogHandler() })
         ) {
             self.serviceProvidersByName = Dictionary(uniqueKeysWithValues: serviceProviders

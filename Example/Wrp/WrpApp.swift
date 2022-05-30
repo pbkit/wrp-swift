@@ -7,20 +7,19 @@ struct WrpApp: App {
     var body: some Scene {
         WindowGroup {
             TabView {
-                WrpAppView(url: "http://localhost:8000/wrp-example")
+                WrpAppView(url: "https://wrp-example.deno.dev/wrp-example")
                     .tabItem {
                         Text("Bidirectional")
                     }.background(Color.gray.opacity(0.1).ignoresSafeArea())
-                WrpServerAppView(url: "http://localhost:8000/wrp-example-guest")
+                WrpServerAppView(url: "https://wrp-example.deno.dev/wrp-example-guest")
                     .tabItem {
                         Text("Server")
                     }.background(Color.gray.opacity(0.1).ignoresSafeArea())
-                WrpClientAppView(url: "http://localhost:8000/wrp-example-host")
+                WrpClientAppView(url: "https://wrp-example.deno.dev/wrp-example-host")
                     .tabItem {
                         Text("Client")
                     }.background(Color.gray.opacity(0.1).ignoresSafeArea())
             }
-            
         }
     }
 }
@@ -30,10 +29,10 @@ struct WrpAppView: View {
     @State var sliderValueStream: DeferStream<Double> = .init()
     let glue: WrpGlue = .init()
     @State var initNumber = 0
-    
+
     @State var textValue = ""
     @State var sliderValue = 0.0
-    
+
     @State var responseTextValue = ""
     @State var responseSliderValue = 0
 
@@ -53,7 +52,7 @@ struct WrpAppView: View {
                     Text("Server Inputs").fontWeight(.semibold)
                     HStack {
                         Text("Text")
-                    TextField("TextValue", text: $textValue)
+                        TextField("TextValue", text: $textValue)
                     }
                     HStack {
                         Text("Slider")
@@ -151,7 +150,7 @@ struct WrpClientAppView: View {
     let url: String
     let glue: WrpGlue = .init()
     @State var initNumber = 0
-    
+
     @State var responseTextValue = ""
     @State var responseSliderValue = 0
 
@@ -229,7 +228,6 @@ struct WrpClientAppViewPreview: PreviewProvider {
 }
 #endif
 
-
 struct WrpServerAppView: View {
     let url: String
     @State var sliderValueStream: DeferStream<Double> = .init()
@@ -252,7 +250,7 @@ struct WrpServerAppView: View {
                     Text("Server Inputs").fontWeight(.semibold)
                     HStack {
                         Text("Text")
-                    TextField("TextValue", text: $textValue)
+                        TextField("TextValue", text: $textValue)
                     }
                     HStack {
                         Text("Slider")

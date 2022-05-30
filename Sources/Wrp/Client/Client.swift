@@ -32,7 +32,7 @@ public extension WrpClient {
         metadata: [String: String] = [:]
     ) throws -> WrpUnaryResponse<Response> {
         guard let method = try?
-            WrpRequestMethodIdentifier(identifier: path)
+            WrpMethodIdentifier(identifier: path)
         else {
             throw WrpClientError.parseError(path)
         }
@@ -95,7 +95,7 @@ public extension WrpClient {
         metadata: [String: String] = [:]
     ) throws -> WrpUnaryResponse<Response> {
         guard let method = try?
-            WrpRequestMethodIdentifier(identifier: path)
+            WrpMethodIdentifier(identifier: path)
         else {
             throw WrpClientError.parseError(path)
         }
@@ -157,7 +157,7 @@ public extension WrpClient {
         metadata: [String: String] = [:]
     ) throws -> WrpStreamingResponse<Response> {
         guard let method = try?
-            WrpRequestMethodIdentifier(identifier: path)
+            WrpMethodIdentifier(identifier: path)
         else {
             throw WrpClientError.parseError(path)
         }
@@ -216,7 +216,7 @@ public extension WrpClient {
         metadata: [String: String] = [:]
     ) throws -> WrpStreamingResponse<Response> {
         guard let method = try?
-            WrpRequestMethodIdentifier(identifier: path)
+            WrpMethodIdentifier(identifier: path)
         else {
             throw WrpClientError.parseError(path)
         }

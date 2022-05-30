@@ -1,6 +1,4 @@
 import Foundation
-import SwiftProtobuf
-import WebKit
 
 extension Data {
     mutating func set(_ other: Data) {

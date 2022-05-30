@@ -15,7 +15,7 @@ class WrpExampleServiceProvider: Pbkit_Wrp_Example_WrpExampleServiceWrpProvider 
 
     func getTextValue(
         request: AsyncStream<Pbkit_Wrp_Example_GetTextValueRequest>,
-        context: MethodHandlerContext<Pbkit_Wrp_Example_GetTextValueResponse>
+        context: WrpRequestContext<Pbkit_Wrp_Example_GetTextValueResponse>
     ) async {
         context.sendHeader([:])
         context.sendMessage(.with {
@@ -26,7 +26,7 @@ class WrpExampleServiceProvider: Pbkit_Wrp_Example_WrpExampleServiceWrpProvider 
 
     func getSliderValue(
         request: AsyncStream<Pbkit_Wrp_Example_GetSliderValueRequest>,
-        context: MethodHandlerContext<Pbkit_Wrp_Example_GetSliderValueResponse>
+        context: WrpRequestContext<Pbkit_Wrp_Example_GetSliderValueResponse>
     ) async {
         context.sendHeader([:])
         for await sliderValue in self.sliderValueStream {

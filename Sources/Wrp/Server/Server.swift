@@ -32,18 +32,17 @@ public final class WrpServer {
                 guard let serviceProvider = host.configuration.serviceProvidersByName[context.methodName.serviceName],
                       let handler = serviceProvider.handle(method: context.methodName.methodName, context: context)
                 else {
-                    var trailer = [
+                    context.sendHeader([:])
+                    context.sendTrailer([
                         "wrp-status": "error",
                         "wrp-message": "Method not found: \(context.methodName.fullName)",
-                    ]
-                    context.sendHeader([:])
-                    context.sendTrailer(&trailer)
+                    ])
                     serverLogger.info("Method not found: \(context.methodName.fullName)")
                     continue
                 }
 
-                let header = DeferStream<[String: String]>()
-                let trailer = DeferStream<[String: String]>()
+                let header = DeferJust<[String: String]>()
+                let trailer = DeferJust<[String: String]>()
                 let payload = DeferStream<Data>()
 
                 taskGroup.addTask {
@@ -55,17 +54,25 @@ public final class WrpServer {
                 }
 
                 taskGroup.addTask { [serverLogger] in
-                    for await header in header.stream.prefix(1) {
-                        serverLogger.trace("Send header \(header)")
-                        context.sendHeader(header)
+                    do {
+                        for try await header in header.stream {
+                            serverLogger.trace("Send header \(header)")
+                            context.sendHeader(header)
+                        }
+                    } catch {
+                        serverLogger.error("Error on reading header stream \(error)")
                     }
                     for await payload in payload.stream {
                         serverLogger.trace("Send payload \(payload.map { $0 })")
                         context.sendPayload(payload)
                     }
-                    for await var trailer in trailer.stream.prefix(1) {
-                        serverLogger.trace("Send trailer \(trailer)")
-                        context.sendTrailer(&trailer)
+                    do {
+                        for try await trailer in trailer.stream {
+                            serverLogger.trace("Send trailer \(trailer)")
+                            context.sendTrailer(trailer)
+                        }
+                    } catch {
+                        serverLogger.error("Error on reading trailer stream \(error)")
                     }
                     serverLogger.info("Done \(context.methodName.fullName)")
                     // @TODO: Error handling on sending part
@@ -80,7 +87,7 @@ public final class WrpServer {
 public extension WrpServer {
     static func create(
         glue: WrpGlue,
-        serviceProviders: [WrpHandlerProvider],
+        serviceProviders: [WrpServiceProvider],
         logger: Logger = .init(label: "io.wrp", factory: { _ in SwiftLogNoOpLogHandler() })
     ) -> WrpServer {
         let host = WrpHost(
@@ -94,9 +101,9 @@ public extension WrpServer {
 public extension WrpServer {
     struct Configuration {
         public var logger: Logger
-        public var serviceProviders: [WrpHandlerProvider]
+        public var serviceProviders: [WrpServiceProvider]
         public init(
-            serviceProviders: [WrpHandlerProvider],
+            serviceProviders: [WrpServiceProvider],
             logger: Logger = .init(label: "io.wrp", factory: { _ in SwiftLogNoOpLogHandler() })
         ) {
             self.logger = logger
