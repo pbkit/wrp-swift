@@ -5,22 +5,13 @@ import Wrp
 @main
 struct WrpApp: App {
     var body: some Scene {
-        WindowGroup {
-            TabView {
-                WrpAppView(url: "https://wrp-example.deno.dev/wrp-example")
-                    .tabItem {
-                        Text("Bidirectional")
-                    }.background(Color.gray.opacity(0.1).ignoresSafeArea())
-                WrpServerAppView(url: "https://wrp-example.deno.dev/wrp-example-guest")
-                    .tabItem {
-                        Text("Server")
-                    }.background(Color.gray.opacity(0.1).ignoresSafeArea())
-                WrpClientAppView(url: "https://wrp-example.deno.dev/wrp-example-host")
-                    .tabItem {
-                        Text("Client")
-                    }.background(Color.gray.opacity(0.1).ignoresSafeArea())
-            }
-        }
+      WindowGroup {
+        WrpSampleView(store: .init(
+          initialState: .init(),
+          reducer: .init(),
+          environment: .init(serviceProvider: .init())
+        ))
+      }
     }
 }
 
