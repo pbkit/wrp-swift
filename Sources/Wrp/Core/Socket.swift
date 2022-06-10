@@ -13,7 +13,7 @@ public class WrpSocket {
     }
 
     public func handshake(interval: UInt32 = 500, limit: Int = 10) async throws {
-        for count in 0 ..< interval {
+        for count in 0 ..< limit {
             guard let webView = self.glue.webView else {
                 self.configuration.logger.debug("handshake: Cannot find WebView")
                 throw SocketError.webViewError("Cannot find Webview")
@@ -35,7 +35,7 @@ public class WrpSocket {
                 self.configuration.logger.debug("handshake: Completed")
                 return
             } catch {
-                self.configuration.logger.debug("handshake: Retrying \(count)/\(interval)")
+                self.configuration.logger.debug("handshake: Retrying \(count)/\(limit)")
                 try? await Task.sleep(nanoseconds: UInt64(interval * 1_000_000))
             }
         }
