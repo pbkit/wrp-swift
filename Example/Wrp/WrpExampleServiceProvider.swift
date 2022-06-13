@@ -38,40 +38,51 @@ class WrpExampleServiceProvider: Pbkit_Wrp_Example_WrpExampleServiceWrpProvider 
 }
 
 class WrpExampleServiceProviderForTCA: Pbkit_Wrp_Example_WrpExampleServiceWrpProvider {
+    var text: String?
 
-  var text: String?
-  var sliderValue: Double?
-  var isFirstConnection: Bool = true
+    private var _sliderValue: Double?
+    private let sliderValueStream: DeferStream<Double> = .init()
+    private var sliderValueSequence: SharedAsyncSequence<AsyncStream<Double>>
 
-  func getTextValue(
-    request: AsyncStream<Pbkit_Wrp_Example_GetTextValueRequest>,
-    context: WrpRequestContext<Pbkit_Wrp_Example_GetTextValueResponse>
-  ) async {
-    guard let text = text else {
-      return
+    init() {
+        self.sliderValueSequence = self.sliderValueStream.stream.shared()
     }
 
-    context.sendHeader([:])
-    context.sendMessage(.with {
-      $0.text = text
-    })
-    context.sendTrailer([:])
-  }
-
-  func getSliderValue(
-    request: AsyncStream<Pbkit_Wrp_Example_GetSliderValueRequest>,
-    context: WrpRequestContext<Pbkit_Wrp_Example_GetSliderValueResponse>
-  ) async {
-    guard let sliderValue = sliderValue else {
-      return
+    var sliderValue: Double? {
+        get { self._sliderValue }
+        set {
+            self._sliderValue = newValue
+            if let value = newValue {
+                self.sliderValueStream.yield(value)
+            }
+        }
     }
 
-    if isFirstConnection {
-      context.sendHeader([:])
-      isFirstConnection = false
+    func getTextValue(
+        request: AsyncStream<Pbkit_Wrp_Example_GetTextValueRequest>,
+        context: WrpRequestContext<Pbkit_Wrp_Example_GetTextValueResponse>
+    ) async {
+        context.sendHeader([:])
+        if let text = text {
+            context.sendMessage(.with {
+                $0.text = text
+            })
+        }
+        context.sendTrailer([:])
     }
-    context.sendMessage(.with {
-      $0.value = Int32(sliderValue)
-    })
-  }
+
+    func getSliderValue(
+        request: AsyncStream<Pbkit_Wrp_Example_GetSliderValueRequest>,
+        context: WrpRequestContext<Pbkit_Wrp_Example_GetSliderValueResponse>
+    ) async {
+        context.sendHeader([:])
+        do {
+            for try await sliderValue in self.sliderValueSequence {
+                context.sendMessage(.with {
+                    $0.value = Int32(sliderValue)
+                })
+            }
+        } catch {}
+        context.sendTrailer([:])
+    }
 }

@@ -9,5 +9,5 @@ import Combine
 import Wrp
 
 struct WrpSampleEnvironment {
-  var serviceProvider: WrpExampleServiceProviderForTCA
+    var serviceProvider: WrpExampleServiceProviderForTCA
 }

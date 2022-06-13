@@ -13,24 +13,23 @@ public final class WrpServer {
         self.configuration = configuration
     }
 
-  public func start() -> AsyncThrowingStream<String, Error> {
-    let stream = AsyncThrowingStream<String, Error> { continuation in
-      Task {
-        self.configuration.logger.trace("Trying to start host")
-        do {
-          try await self.host.start()
-        } catch {
-          continuation.finish(throwing: error)
+    public func start() -> AsyncThrowingStream<String, Error> {
+        return AsyncThrowingStream<String, Error> { continuation in
+            Task {
+                self.configuration.logger.trace("Trying to start host")
+                do {
+                    try await self.host.start()
+                } catch {
+                    continuation.finish(throwing: error)
+                }
+                self.configuration.logger.trace("Host started. Start listening")
+                // @TODO: Change to other value
+                continuation.yield("")
+                await self.listen()
+                self.configuration.logger.trace("Gracefully finished")
+                continuation.finish()
+            }
         }
-        self.configuration.logger.trace("Host started. Start listening")
-        continuation.yield("")
-        await self.listen()
-        self.configuration.logger.trace("Gracefully finished")
-        continuation.finish()
-      }
-    }
-
-    return stream
     }
 
     public func listen() async {

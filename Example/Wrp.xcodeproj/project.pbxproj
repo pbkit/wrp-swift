@@ -15,6 +15,7 @@
 		571B0BE4283B55A400F57F78 /* WrpExampleServiceProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 571B0BE3283B55A400F57F78 /* WrpExampleServiceProvider.swift */; };
 		571B0BEA283B63C100F57F78 /* pbkit.wrp.example.WrpExampleService.wrp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 571B0BE9283B63C100F57F78 /* pbkit.wrp.example.WrpExampleService.wrp.swift */; };
 		57230F5D2844CBEE003237E5 /* wrp-example.proto in Sources */ = {isa = PBXBuildFile; fileRef = 57230F5C2844CBEE003237E5 /* wrp-example.proto */; };
+		57288C402856FA27008CEF23 /* WrpSampleSwiftUIView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57288C3F2856FA27008CEF23 /* WrpSampleSwiftUIView.swift */; };
 		5740EE19283F4B7E00DF378A /* Style.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5740EE18283F4B7E00DF378A /* Style.swift */; };
 		5740EE1C2840CC1C00DF378A /* ComposableArchitecture in Frameworks */ = {isa = PBXBuildFile; productRef = 5740EE1B2840CC1C00DF378A /* ComposableArchitecture */; };
 		57D7E61528375E8F00C5F532 /* WrpApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57D7E61428375E8F00C5F532 /* WrpApp.swift */; };
@@ -23,11 +24,11 @@
 		57D7E62C283767E400C5F532 /* SwiftProtobuf in Frameworks */ = {isa = PBXBuildFile; productRef = 57D7E62B283767E400C5F532 /* SwiftProtobuf */; };
 		57D7E62F283767FD00C5F532 /* GRPC in Frameworks */ = {isa = PBXBuildFile; productRef = 57D7E62E283767FD00C5F532 /* GRPC */; };
 		C9F4531328459498009A26B2 /* WrpSampleAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9F4530E28459498009A26B2 /* WrpSampleAction.swift */; };
-		C9F4531428459498009A26B2 /* WrpSampleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9F4530F28459498009A26B2 /* WrpSampleView.swift */; };
+		C9F4531428459498009A26B2 /* WrpSampleTCAView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9F4530F28459498009A26B2 /* WrpSampleTCAView.swift */; };
 		C9F4531528459498009A26B2 /* WrpSampleEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9F4531028459498009A26B2 /* WrpSampleEnvironment.swift */; };
 		C9F4531628459498009A26B2 /* WrpSampleReducer.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9F4531128459498009A26B2 /* WrpSampleReducer.swift */; };
 		C9F4531728459498009A26B2 /* WrpSampleState.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9F4531228459498009A26B2 /* WrpSampleState.swift */; };
-		C9F4531A2852FAB5009A26B2 /* AsyncSequence+publisher.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9F453192852FAB5009A26B2 /* AsyncSequence+publisher.swift */; };
+		C9F4531A2852FAB5009A26B2 /* AsyncSequence+Publisher.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9F453192852FAB5009A26B2 /* AsyncSequence+Publisher.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -38,17 +39,18 @@
 		571B0BE3283B55A400F57F78 /* WrpExampleServiceProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WrpExampleServiceProvider.swift; sourceTree = "<group>"; };
 		571B0BE9283B63C100F57F78 /* pbkit.wrp.example.WrpExampleService.wrp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = pbkit.wrp.example.WrpExampleService.wrp.swift; sourceTree = "<group>"; };
 		57230F5C2844CBEE003237E5 /* wrp-example.proto */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.protobuf; path = "wrp-example.proto"; sourceTree = "<group>"; };
+		57288C3F2856FA27008CEF23 /* WrpSampleSwiftUIView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WrpSampleSwiftUIView.swift; sourceTree = "<group>"; };
 		5740EE18283F4B7E00DF378A /* Style.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Style.swift; sourceTree = "<group>"; };
 		57D7E61128375E8F00C5F532 /* WrpExample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WrpExample.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		57D7E61428375E8F00C5F532 /* WrpApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WrpApp.swift; sourceTree = "<group>"; };
 		57D7E61828375E9100C5F532 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		57D7E61B28375E9100C5F532 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		C9F4530E28459498009A26B2 /* WrpSampleAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WrpSampleAction.swift; sourceTree = "<group>"; };
-		C9F4530F28459498009A26B2 /* WrpSampleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WrpSampleView.swift; sourceTree = "<group>"; };
+		C9F4530F28459498009A26B2 /* WrpSampleTCAView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WrpSampleTCAView.swift; sourceTree = "<group>"; };
 		C9F4531028459498009A26B2 /* WrpSampleEnvironment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WrpSampleEnvironment.swift; sourceTree = "<group>"; };
 		C9F4531128459498009A26B2 /* WrpSampleReducer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WrpSampleReducer.swift; sourceTree = "<group>"; };
 		C9F4531228459498009A26B2 /* WrpSampleState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WrpSampleState.swift; sourceTree = "<group>"; };
-		C9F453192852FAB5009A26B2 /* AsyncSequence+publisher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AsyncSequence+publisher.swift"; sourceTree = "<group>"; };
+		C9F453192852FAB5009A26B2 /* AsyncSequence+Publisher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AsyncSequence+Publisher.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -92,7 +94,7 @@
 				57D7E61828375E9100C5F532 /* Assets.xcassets */,
 				57D7E61A28375E9100C5F532 /* Preview Content */,
 				5740EE18283F4B7E00DF378A /* Style.swift */,
-				C9F453192852FAB5009A26B2 /* AsyncSequence+publisher.swift */,
+				C9F453192852FAB5009A26B2 /* AsyncSequence+Publisher.swift */,
 				C9F45318284594A2009A26B2 /* WrpSample */,
 			);
 			path = Wrp;
@@ -130,10 +132,11 @@
 			isa = PBXGroup;
 			children = (
 				C9F4530E28459498009A26B2 /* WrpSampleAction.swift */,
-				C9F4530F28459498009A26B2 /* WrpSampleView.swift */,
+				C9F4530F28459498009A26B2 /* WrpSampleTCAView.swift */,
 				C9F4531028459498009A26B2 /* WrpSampleEnvironment.swift */,
 				C9F4531128459498009A26B2 /* WrpSampleReducer.swift */,
 				C9F4531228459498009A26B2 /* WrpSampleState.swift */,
+				57288C3F2856FA27008CEF23 /* WrpSampleSwiftUIView.swift */,
 			);
 			path = WrpSample;
 			sourceTree = "<group>";
@@ -226,9 +229,10 @@
 				571B0BDD2837E3E900F57F78 /* pbkit.wrp.example.GetSliderValueRequest.pb.swift in Sources */,
 				571B0BE4283B55A400F57F78 /* WrpExampleServiceProvider.swift in Sources */,
 				571B0BDE2837E3E900F57F78 /* pbkit.wrp.example.GetSliderValueResponse.pb.swift in Sources */,
+				57288C402856FA27008CEF23 /* WrpSampleSwiftUIView.swift in Sources */,
 				57230F5D2844CBEE003237E5 /* wrp-example.proto in Sources */,
-				C9F4531428459498009A26B2 /* WrpSampleView.swift in Sources */,
-				C9F4531A2852FAB5009A26B2 /* AsyncSequence+publisher.swift in Sources */,
+				C9F4531428459498009A26B2 /* WrpSampleTCAView.swift in Sources */,
+				C9F4531A2852FAB5009A26B2 /* AsyncSequence+Publisher.swift in Sources */,
 				571B0BDC2837E3E900F57F78 /* pbkit.wrp.example.GetTextValueRequest.pb.swift in Sources */,
 				C9F4531528459498009A26B2 /* WrpSampleEnvironment.swift in Sources */,
 				C9F4531628459498009A26B2 /* WrpSampleReducer.swift in Sources */,

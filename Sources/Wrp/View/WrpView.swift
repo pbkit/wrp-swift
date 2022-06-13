@@ -5,18 +5,18 @@ public struct WrpView: UIViewControllerRepresentable {
     private let urlString: String
     private let configuration: WKWebViewConfiguration
     private let glue: WrpGlue
-    private let onGlueClosed: (() -> ())?
+    private let onGlueReconnect: (() -> Void)?
 
     public init(
         urlString: String,
         configuration: WKWebViewConfiguration = .init(),
         glue: WrpGlue,
-        onGlueClosed: (() -> ())? = nil
+        onGlueReconnect: (() -> Void)? = nil
     ) {
         self.urlString = urlString
         self.configuration = configuration
         self.glue = glue
-        self.onGlueClosed = onGlueClosed
+        self.onGlueReconnect = onGlueReconnect
     }
 
     public func makeUIViewController(context: Context) -> some UIViewController {
@@ -25,7 +25,7 @@ public struct WrpView: UIViewControllerRepresentable {
             configuration: self.configuration,
             messageHandler: context.coordinator,
             glue: self.glue,
-            onGlueClosed: self.onGlueClosed
+            onGlueClosed: self.onGlueReconnect
         )
     }
 
@@ -58,7 +58,7 @@ class AppBridgeViewController: UIViewController {
 
     // @wrp: WrpGlue
     private let glue: WrpGlue
-    private let onGlueClosed: (() -> ())?
+    private let onGlueClosed: (() -> Void)?
 
     var webview: WKWebView {
         return self._webview
@@ -81,7 +81,7 @@ class AppBridgeViewController: UIViewController {
         configuration: WKWebViewConfiguration,
         messageHandler: WKScriptMessageHandler,
         glue: WrpGlue,
-        onGlueClosed: (() -> ())?
+        onGlueClosed: (() -> Void)?
     ) {
         self.urlString = urlString
         self.configuration = configuration
@@ -135,8 +135,7 @@ class AppBridgeViewController: UIViewController {
 
 extension AppBridgeViewController: WKUIDelegate, WKNavigationDelegate {
     func webView(_ webView: WKWebView, didFinish: WKNavigation) {
-        self.glue.close()
-        self.onGlueClosed?()
+        self.glue.tryReconnect(afterReconnect: self.onGlueClosed)
     }
 
     func webView(
