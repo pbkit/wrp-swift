@@ -2,18 +2,21 @@ import SwiftUI
 import WebKit
 
 public struct WrpView: UIViewControllerRepresentable {
-    let urlString: String
-    let configuration: WKWebViewConfiguration
-    let glue: WrpGlue
+    private let urlString: String
+    private let configuration: WKWebViewConfiguration
+    private let glue: WrpGlue
+    private let onGlueReconnect: (() -> Void)?
 
     public init(
         urlString: String,
         configuration: WKWebViewConfiguration = .init(),
-        glue: WrpGlue
+        glue: WrpGlue,
+        onGlueReconnect: (() -> Void)? = nil
     ) {
         self.urlString = urlString
         self.configuration = configuration
         self.glue = glue
+        self.onGlueReconnect = onGlueReconnect
     }
 
     public func makeUIViewController(context: Context) -> some UIViewController {
@@ -21,7 +24,8 @@ public struct WrpView: UIViewControllerRepresentable {
             urlString: self.urlString,
             configuration: self.configuration,
             messageHandler: context.coordinator,
-            glue: self.glue
+            glue: self.glue,
+            onGlueClosed: self.onGlueReconnect
         )
     }
 
@@ -54,6 +58,7 @@ class AppBridgeViewController: UIViewController {
 
     // @wrp: WrpGlue
     private let glue: WrpGlue
+    private let onGlueClosed: (() -> Void)?
 
     var webview: WKWebView {
         return self._webview
@@ -75,7 +80,8 @@ class AppBridgeViewController: UIViewController {
         urlString: String,
         configuration: WKWebViewConfiguration,
         messageHandler: WKScriptMessageHandler,
-        glue: WrpGlue
+        glue: WrpGlue,
+        onGlueClosed: (() -> Void)?
     ) {
         self.urlString = urlString
         self.configuration = configuration
@@ -83,6 +89,7 @@ class AppBridgeViewController: UIViewController {
 
         // @wrp: WrpGlue
         self.glue = glue
+        self.onGlueClosed = onGlueClosed
 
         super.init(nibName: nil, bundle: nil)
     }
@@ -128,7 +135,7 @@ class AppBridgeViewController: UIViewController {
 
 extension AppBridgeViewController: WKUIDelegate, WKNavigationDelegate {
     func webView(_ webView: WKWebView, didFinish: WKNavigation) {
-        self.glue.close()
+        self.glue.tryReconnect(afterReconnect: self.onGlueClosed)
     }
 
     func webView(

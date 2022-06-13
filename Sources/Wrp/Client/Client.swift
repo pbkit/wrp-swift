@@ -14,11 +14,23 @@ public final class WrpClient {
         self.configuration = configuration
     }
 
-    public func start() async throws {
-        self.configuration.logger.trace("Trying to start guest")
-        try await self.guest.start()
-        self.configuration.logger.trace("Guest started. Start listening")
-        self.guest.listen()
+    public func start() -> AsyncThrowingStream<String, Error> {
+        return AsyncThrowingStream<String, Error> { continuation in
+            Task {
+                self.configuration.logger.trace("Trying to start guest")
+                do {
+                    try await self.guest.start()
+                } catch {
+                    continuation.finish(throwing: error)
+                }
+                self.configuration.logger.trace("Guest started. Start listening")
+                // @TODO: Change to other value
+                continuation.yield("")
+                await self.guest.listen()
+                self.configuration.logger.trace("Gracefully finished")
+                continuation.finish()
+            }
+        }
     }
 }
 

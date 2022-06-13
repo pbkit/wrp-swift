@@ -20,47 +20,45 @@ public final class WrpGuest {
         try await self.channel.socket.handshake()
     }
 
-    public func listen() {
-        Task.init {
-            for await message in self.channel.listen() {
-                guard message.message != nil else { continue }
-                switch message.message {
-                case .hostInitialize(let message):
-                    self.availableMethods = message.availableMethods.map { identifier in
-                        try! WrpMethodIdentifier(identifier: identifier)
-                    }
-                    availableMethodsDeferStream.continuation.finish()
-                    continue
-                case .hostError(let message):
-                    self.configuration.onError?(message.message)
-                    continue
-                case .hostResStart(let message):
-                    if let request = self.requests[message.reqID] {
-                        request.header.continuation.yield(message.header)
-                        request.header.continuation.finish()
-                    }
-                    continue
-                case .hostResPayload(let message):
-                    if let request = self.requests[message.reqID] {
-                        request.payload.continuation.yield(message.payload)
-                    }
-                    continue
-                case .hostResFinish(let message):
-                    if let request = self.requests[message.reqID] {
-                        request.trailer.continuation.yield(message.trailer)
-                        if message.trailer["wrp-status"] == "ok" {
-                            request.payload.continuation.finish()
-                        } else {
-                            _ = message.trailer["wrp-message"] ?? ""
-                            // @TODO: Make DeferStream with AsyncThrowingStream
-                            request.payload.continuation.finish()
-                        }
-                    }
-                    self.requests.removeValue(forKey: message.reqID)
-                    continue
-                default:
-                    continue
+    public func listen() async {
+        for await message in self.channel.listen() {
+            guard message.message != nil else { continue }
+            switch message.message {
+            case .hostInitialize(let message):
+                self.availableMethods = message.availableMethods.map { identifier in
+                    try! WrpMethodIdentifier(identifier: identifier)
                 }
+                self.availableMethodsDeferStream.continuation.finish()
+                continue
+            case .hostError(let message):
+                self.configuration.onError?(message.message)
+                continue
+            case .hostResStart(let message):
+                if let request = self.requests[message.reqID] {
+                    request.header.continuation.yield(message.header)
+                    request.header.continuation.finish()
+                }
+                continue
+            case .hostResPayload(let message):
+                if let request = self.requests[message.reqID] {
+                    request.payload.continuation.yield(message.payload)
+                }
+                continue
+            case .hostResFinish(let message):
+                if let request = self.requests[message.reqID] {
+                    request.trailer.continuation.yield(message.trailer)
+                    if message.trailer["wrp-status"] == "ok" {
+                        request.payload.continuation.finish()
+                    } else {
+                        _ = message.trailer["wrp-message"] ?? ""
+                        // @TODO: Make DeferStream with AsyncThrowingStream
+                        request.payload.continuation.finish()
+                    }
+                }
+                self.requests.removeValue(forKey: message.reqID)
+                continue
+            default:
+                continue
             }
         }
     }
