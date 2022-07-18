@@ -1,4 +1,4 @@
-// swift-tools-version: 5.6
+// swift-tools-version: 5.5
 
 import PackageDescription
 
@@ -6,10 +6,10 @@ let package = Package(
     name: "wrp-swift",
     platforms: [
         .macOS(.v10_15),
-        .iOS(.v13),
+        .iOS(.v13)
     ],
     products: [
-        .library(name: "Wrp", targets: ["Wrp"]),
+        .library(name: "Wrp", targets: ["Wrp"])
     ],
     dependencies: [
         // GRPC library for protobuf serializer/deserializer
@@ -17,7 +17,7 @@ let package = Package(
         // Protobuf library for en/decoding Wrp messages
         .package(url: "https://github.com/apple/swift-protobuf.git", from: "1.19.0"),
         // Swift logging API
-        .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0"),
+        .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0")
     ],
     targets: [
         .target(
@@ -32,6 +32,6 @@ let package = Package(
         .testTarget(
             name: "WrpTests",
             dependencies: ["Wrp"]
-        ),
+        )
     ]
 )

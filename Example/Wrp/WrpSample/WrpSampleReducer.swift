@@ -88,6 +88,7 @@ extension WrpSampleReducer {
                             .toPublisher()
                             .map { Double($0.value) }
                             .replaceError(with: 0.0)
+                            .receive(on: DispatchQueue.main)
                             .catchToEffect()
                             .map(WrpSampleAction.getSliderValueResult)
 

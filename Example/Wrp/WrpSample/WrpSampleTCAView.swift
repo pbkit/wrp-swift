@@ -18,7 +18,6 @@ struct WrpSampleView: View {
     private let store: WrpSampleStore
 
     let url: String = "https://pbkit.dev/wrp-example"
-    @State var wrpExampleClient: Pbkit_Wrp_Example_WrpExampleServiceWrpClient!
 
     init(store: WrpSampleStore) {
         self.viewStore = ViewStore(store)
